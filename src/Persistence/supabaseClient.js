@@ -7,9 +7,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 const SUPABASE_URL  = 'https://qwszgjivoknjhhswiatz.supabase.co';
-// IMPORTANTE: Reemplaza esta key con la anon public key real de tu proyecto Supabase.
-// La encuentras en: Supabase Dashboard → Settings → API → Project API keys → anon public
-const SUPABASE_ANON_KEY = 'REEMPLAZA_CON_TU_ANON_KEY';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c3pnaml2b2tuamhoc3dpYXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTczNzYsImV4cCI6MjA5NDA5MzM3Nn0.IjQ9PWCIQe6owRAzS3jV-i-Xhi65Zj3eQcGi0D4utxI';
 
 // La anon public key puede vivir en frontend si las politicas RLS estan bien configuradas.
 // Nunca pongas aqui la service_role key.
