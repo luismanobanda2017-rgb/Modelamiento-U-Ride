@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <h2>🚗 U-Ride</h2>
+            <p>Viajes Seguros UTA</p>
+        </div>
+
+        <nav class="sidebar-nav" id="navMenu">
+            <a href="dashboard.html" class="activo"><span class="icon">🏠</span> Inicio</a>
+            <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
+            <!-- Links dinamicos segun rol -->
+            <div id="navConductor" style="display:none;">
+                <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
+                <a href="mis-viajes.html"><span class="icon">🗂️</span> Mis Viajes</a>
+                <a href="solicitudes.html"><span class="icon">📋</span> Solicitudes</a>
+            </div>
+            <div id="navPasajero">
+                <a href="buscar-viajes.html"><span class="icon">🔍</span> Buscar Viajes</a>
+                <a href="mis-solicitudes.html"><span class="icon">📄</span> Mis Solicitudes</a>
+            </div>
+            <div id="navAdmin" style="display:none;">
+                <a href="admin.html"><span class="icon">⚙️</span> Panel Admin</a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <strong id="sidebarNombre">Cargando...</strong>
+                <span id="sidebarRol"></span>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 id="saludo">Bienvenido/a 👋</h1>
+            <p id="subtitleDash">Panel principal de U-Ride</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <!-- Se llenan dinámicamente -->
+        </div>
+
+        <!-- Sección conductor: próximos viajes -->
+        <div id="seccionConductor" style="display:none;">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h2 style="font-size:18px;">Mis Próximos Viajes</h2>
+                    <a href="publicar-viaje.html" class="btn btn-primary btn-sm">+ Publicar Viaje</a>
+                </div>
+                <div id="listaViajesConductor">
+                    <p style="color:var(--texto-gris); font-size:14px;">Cargando viajes...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección pasajero: viajes disponibles -->
+        <div id="seccionPasajero">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h2 style="font-size:18px;">Viajes Disponibles</h2>
+                    <a href="buscar-viajes.html" class="btn btn-primary btn-sm">Ver todos</a>
+                </div>
+                <div id="listaViajesDisponibles">
+                    <p style="color:var(--texto-gris); font-size:14px;">Cargando viajes...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección admin -->
+        <div id="seccionAdmin" style="display:none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-num" id="statTotalUsuarios">-</div>
+                    <div class="stat-label">Total Usuarios</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-num" id="statReportesPend">-</div>
+                    <div class="stat-label">Reportes Pendientes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🚫</div>
+                    <div class="stat-num" id="statSuspendidos">-</div>
+                    <div class="stat-label">Usuarios Suspendidos</div>
+                </div>
+            </div>
+            <div style="margin-top:16px;">
+                <a href="admin.html" class="btn btn-primary">Ir al Panel Administrativo</a>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script type="module">
+    import {
+        obtenerUsuarioActual, cerrarSesion,
+        buscarViajes, publicarViaje,
+        obtenerUsuarios, obtenerReportes,
+        supabase
+    } from '../Persistence/supabaseClient.js';
+
+    const usuario = obtenerUsuarioActual();
+    if (!usuario) { window.location.href = 'index.html'; }
+
+    // Sidebar info
+    document.getElementById('sidebarNombre').textContent = usuario.nombre;
+    document.getElementById('sidebarRol').textContent    = usuario.rol.charAt(0).toUpperCase() + usuario.rol.slice(1);
+    document.getElementById('saludo').textContent        = `Bienvenido/a, ${usuario.nombre.split(' ')[0]} 👋`;
+    document.getElementById('subtitleDash').textContent  = `Panel de ${usuario.rol} · U-Ride UTA`;
+
+    document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    // Mostrar nav y secciones según rol
+    if (usuario.rol === 'conductor') {
+        document.getElementById('navConductor').style.display = 'block';
+        document.getElementById('seccionConductor').style.display = 'block';
+        document.getElementById('seccionPasajero').style.display  = 'none';
+        cargarViajesConductor();
+    } else if (usuario.rol === 'admin') {
+        document.getElementById('navAdmin').style.display    = 'block';
+        document.getElementById('seccionAdmin').style.display = 'block';
+        document.getElementById('seccionPasajero').style.display = 'none';
+        cargarStatsAdmin();
+    } else {
+        cargarViajesDisponibles();
+    }
+
+    // Stats comunes
+    async function cargarViajesConductor() {
+        const { data } = await supabase
+            .from('viajes')
+            .select('*')
+            .eq('conductor_id', usuario.id)
+            .in('estado', ['disponible', 'completo'])
+            .order('fecha', { ascending: true })
+            .limit(5);
+
+        const grid = document.getElementById('statsGrid');
+        const total = data?.length || 0;
+        const disp  = data?.filter(v => v.estado === 'disponible').length || 0;
+        grid.innerHTML = `
+            <div class="stat-card"><div class="stat-icon">🚗</div><div class="stat-num">${total}</div><div class="stat-label">Viajes Publicados</div></div>
+            <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-num">${disp}</div><div class="stat-label">Disponibles</div></div>
+            <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-num">${usuario.calificacion_prom || '—'}</div><div class="stat-label">Calificación</div></div>
+        `;
+
+        const lista = document.getElementById('listaViajesConductor');
+        if (!data || data.length === 0) {
+            lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">No tienes viajes publicados. <a href="publicar-viaje.html">Publica uno ahora</a>.</p>';
+            return;
+        }
+        lista.innerHTML = data.map(v => `
+            <div class="viaje-card">
+                <div class="viaje-ruta">📍 ${v.origen} → ${v.destino}</div>
+                <div class="viaje-meta">
+                    <span>📅 ${v.fecha}</span>
+                    <span>🕐 ${v.hora_salida}</span>
+                    <span>👥 ${v.cupos_disponibles}/${v.cupos_total} cupos</span>
+                    <span>💵 $${v.precio_persona}/persona</span>
+                </div>
+                <span class="badge badge-${v.estado}">${v.estado}</span>
+                <div style="margin-top:10px; display:flex; gap:8px;">
+                    <a href="solicitudes.html?viaje=${v.id}" class="btn btn-secondary btn-sm">Ver Solicitudes</a>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function cargarViajesDisponibles() {
+        const data = await buscarViajes();
+        const grid = document.getElementById('statsGrid');
+        grid.innerHTML = `
+            <div class="stat-card"><div class="stat-icon">🔍</div><div class="stat-num">${data.length}</div><div class="stat-label">Viajes Disponibles</div></div>
+            <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-num">${usuario.calificacion_prom || '—'}</div><div class="stat-label">Mi Calificación</div></div>
+            <div class="stat-card"><div class="stat-icon">🚗</div><div class="stat-num">${usuario.total_viajes || 0}</div><div class="stat-label">Viajes Realizados</div></div>
+        `;
+
+        const lista = document.getElementById('listaViajesDisponibles');
+        if (data.length === 0) {
+            lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">No hay viajes disponibles en este momento.</p>';
+            return;
+        }
+        lista.innerHTML = data.slice(0, 4).map(v => `
+            <div class="viaje-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div class="viaje-ruta">📍 ${v.origen} → ${v.destino}</div>
+                        <div class="viaje-meta">
+                            <span>👤 ${v.conductor?.nombre || 'Conductor'}</span>
+                            <span>⭐ ${v.conductor?.calificacion_prom || '—'}</span>
+                            <span>📅 ${v.fecha} ${v.hora_salida}</span>
+                            <span>👥 ${v.cupos_disponibles} cupos</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:20px; font-weight:800; color:var(--azul-primary);">$${v.precio_persona}</div>
+                        <div style="font-size:11px; color:var(--texto-gris);">por persona</div>
+                    </div>
+                </div>
+                <a href="buscar-viajes.html?id=${v.id}" class="btn btn-primary btn-sm" style="margin-top:10px;">Ver Detalles y Solicitar</a>
+            </div>
+        `).join('');
+    }
+
+    async function cargarStatsAdmin() {
+        const [usuarios, reportes] = await Promise.all([obtenerUsuarios(), obtenerReportes()]);
+        document.getElementById('statTotalUsuarios').textContent  = usuarios.length;
+        document.getElementById('statReportesPend').textContent   = reportes.filter(r => r.estado === 'pendiente').length;
+        document.getElementById('statSuspendidos').textContent    = usuarios.filter(u => u.estado === 'suspendido').length;
+    }
+</script>
+
+</body>
+</html>

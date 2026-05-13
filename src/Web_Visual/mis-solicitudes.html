@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Mis Solicitudes</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo"><h2>🚗 U-Ride</h2><p>Viajes Seguros UTA</p></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
+            <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="buscar-viajes.html"><span class="icon">🔍</span> Buscar Viajes</a>
+            <a href="mis-solicitudes.html" class="activo"><span class="icon">📄</span> Mis Solicitudes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info"><strong id="sidebarNombre">—</strong></div>
+            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Mis Solicitudes</h1>
+            <p>Estado de tus solicitudes de viaje</p>
+        </div>
+
+        <div id="listaSolicitudes">
+            <p style="color:var(--texto-gris);font-size:14px;">Cargando...</p>
+        </div>
+    </main>
+</div>
+
+<!-- Modal calificar conductor -->
+<div class="modal-overlay hidden" id="modalCalificar">
+    <div class="modal">
+        <button class="modal-close" id="btnCerrarCalif">✕</button>
+        <h2>Calificar Conductor</h2>
+        <p id="nombreCalificado">—</p>
+        <div style="margin:16px 0;">
+            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:8px;">Calificación</label>
+            <div id="starsCalif" style="display:flex;gap:8px;font-size:32px;cursor:pointer;">
+                <span data-val="1">☆</span>
+                <span data-val="2">☆</span>
+                <span data-val="3">☆</span>
+                <span data-val="4">☆</span>
+                <span data-val="5">☆</span>
+            </div>
+            <input type="hidden" id="califValor" value="0">
+        </div>
+        <div class="form-group">
+            <label for="califComentario">Comentario (opcional)</label>
+            <textarea id="califComentario" rows="3" placeholder="Comparte tu experiencia..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="btnCancelarCalif">Cancelar</button>
+            <button class="btn btn-primary" id="btnEnviarCalif">Enviar Calificación</button>
+        </div>
+        <div id="msgCalif" class="msg"></div>
+    </div>
+</div>
+
+<script type="module">
+    import {
+        obtenerUsuarioActual, cerrarSesion,
+        calificar, supabase
+    } from '../Persistence/supabaseClient.js';
+
+    const usuario = obtenerUsuarioActual();
+    if (!usuario) { window.location.href = 'index.html'; }
+
+    document.getElementById('sidebarNombre').textContent = usuario.nombre;
+    document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    let califData = null;
+
+    async function cargar() {
+        const { data } = await supabase
+            .from('solicitudes')
+            .select(`*, viaje:viajes(*, conductor:usuarios!conductor_id(id, nombre, calificacion_prom, verificado))`)
+            .eq('pasajero_id', usuario.id)
+            .order('created_at', { ascending: false });
+
+        const lista = document.getElementById('listaSolicitudes');
+
+        if (!data || data.length === 0) {
+            lista.innerHTML = `
+                <div class="card" style="text-align:center;padding:40px;">
+                    <div style="font-size:48px;margin-bottom:12px;">🔍</div>
+                    <p style="color:var(--texto-gris);font-size:14px;">No has enviado solicitudes aún.</p>
+                    <a href="buscar-viajes.html" class="btn btn-primary" style="margin-top:16px;display:inline-block;width:auto;padding:10px 24px;">Buscar Viajes</a>
+                </div>
+            `;
+            return;
+        }
+
+        lista.innerHTML = data.map(s => {
+            const v = s.viaje;
+            const estadoColor = {
+                pendiente: 'badge-pendiente',
+                aceptada:  'badge-aceptada',
+                rechazada: 'badge-rechazada',
+                cancelada: 'badge-cancelado'
+            }[s.estado] || 'badge-pendiente';
+
+            return `
+                <div class="card" style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="flex:1;">
+                            <div class="viaje-ruta">📍 ${v?.origen || '—'} → ${v?.destino || '—'}</div>
+                            <div class="viaje-meta">
+                                <span>📅 ${v?.fecha || '—'} ${v?.hora_salida || ''}</span>
+                                <span>👤 ${v?.conductor?.nombre || '—'}</span>
+                                <span>⭐ ${v?.conductor?.calificacion_prom || '—'}</span>
+                                <span>💵 $${v?.precio_persona || 0}/persona</span>
+                            </div>
+                            <div style="font-size:12px;color:var(--texto-gris);margin-top:4px;">
+                                Enviada: ${new Date(s.created_at).toLocaleString('es-EC')}
+                            </div>
+                        </div>
+                        <span class="badge ${estadoColor}" style="margin-left:12px;">${s.estado}</span>
+                    </div>
+
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                        ${s.estado === 'pendiente' ? `
+                            <button class="btn btn-danger btn-sm" onclick="cancelarSolicitud('${s.id}')">
+                                Cancelar Solicitud
+                            </button>
+                        ` : ''}
+                        ${s.estado === 'aceptada' && v?.estado === 'finalizado' ? `
+                            <button class="btn btn-secondary btn-sm" onclick="abrirCalificar('${v?.conductor?.id}', '${v?.conductor?.nombre}', '${v?.id}')">
+                                ⭐ Calificar Conductor
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.cancelarSolicitud = async function(solicitudId) {
+        if (!confirm('¿Cancelar esta solicitud?')) return;
+        await supabase.from('solicitudes').update({ estado: 'cancelada' }).eq('id', solicitudId);
+        cargar();
+    };
+
+    // Calificación
+    window.abrirCalificar = function(conductorId, nombre, viajeId) {
+        califData = { conductorId, viajeId };
+        document.getElementById('nombreCalificado').textContent = `Califica a ${nombre}`;
+        document.getElementById('califValor').value = '0';
+        document.getElementById('califComentario').value = '';
+        document.getElementById('msgCalif').className = 'msg';
+        document.querySelectorAll('#starsCalif span').forEach(s => {
+            s.textContent = '☆'; s.style.color = '';
+        });
+        document.getElementById('modalCalificar').classList.remove('hidden');
+    };
+
+    document.querySelectorAll('#starsCalif span').forEach(star => {
+        star.addEventListener('click', () => {
+            const val = parseInt(star.dataset.val);
+            document.getElementById('califValor').value = val;
+            document.querySelectorAll('#starsCalif span').forEach((s, i) => {
+                s.textContent = i < val ? '★' : '☆';
+                s.style.color = i < val ? 'var(--amarillo)' : '';
+            });
+        });
+    });
+
+    document.getElementById('btnCerrarCalif').addEventListener('click', () =>
+        document.getElementById('modalCalificar').classList.add('hidden'));
+    document.getElementById('btnCancelarCalif').addEventListener('click', () =>
+        document.getElementById('modalCalificar').classList.add('hidden'));
+
+    document.getElementById('btnEnviarCalif').addEventListener('click', async () => {
+        const puntuacion = parseInt(document.getElementById('califValor').value);
+        if (!puntuacion) { alert('Selecciona una calificación.'); return; }
+
+        const btn = document.getElementById('btnEnviarCalif');
+        const msg = document.getElementById('msgCalif');
+        btn.disabled = true; btn.textContent = 'Enviando...';
+
+        try {
+            await calificar({
+                viajeId:       califData.viajeId,
+                calificadorId: usuario.id,
+                calificadoId:  califData.conductorId,
+                puntuacion,
+                comentario:    document.getElementById('califComentario').value,
+                tipo:          'pasajero_a_conductor'
+            });
+            msg.textContent = '✅ Calificación enviada.';
+            msg.className   = 'msg show msg-success';
+            setTimeout(() => document.getElementById('modalCalificar').classList.add('hidden'), 1500);
+        } catch (err) {
+            msg.textContent = err.message;
+            msg.className   = 'msg show msg-error';
+            btn.disabled    = false; btn.textContent = 'Enviar Calificación';
+        }
+    });
+
+    cargar();
+</script>
+
+</body>
+</html>

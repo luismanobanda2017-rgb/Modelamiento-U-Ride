@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Buscar Viajes</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo"><h2>🚗 U-Ride</h2><p>Viajes Seguros UTA</p></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
+            <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="buscar-viajes.html" class="activo"><span class="icon">🔍</span> Buscar Viajes</a>
+            <a href="mis-solicitudes.html"><span class="icon">📄</span> Mis Solicitudes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info"><strong id="sidebarNombre">—</strong></div>
+            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Buscar Viajes</h1>
+            <p>Encuentra el viaje perfecto para ti</p>
+        </div>
+
+        <div style="display:grid; grid-template-columns:280px 1fr; gap:20px; align-items:start;">
+
+            <!-- Filtros -->
+            <div class="card">
+                <h3 style="font-size:15px; margin-bottom:16px; display:flex; align-items:center; gap:6px;">
+                    🔽 Filtros de Búsqueda
+                </h3>
+                <form id="formFiltros">
+                    <div class="form-group">
+                        <label for="fOrigen">📍 Origen</label>
+                        <input type="text" id="fOrigen" placeholder="Campus Central...">
+                    </div>
+                    <div class="form-group">
+                        <label for="fDestino">🏁 Destino</label>
+                        <input type="text" id="fDestino" placeholder="Zona Norte...">
+                    </div>
+                    <div class="form-group">
+                        <label for="fFecha">📅 Fecha</label>
+                        <input type="date" id="fFecha">
+                    </div>
+                    <div class="form-group">
+                        <label for="fCupos">👥 Asientos Necesarios</label>
+                        <select id="fCupos">
+                            <option value="">Cualquier cantidad</option>
+                            <option value="1">1 asiento</option>
+                            <option value="2">2 asientos</option>
+                            <option value="3">3 asientos</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                    <button type="button" class="btn btn-secondary" id="btnLimpiar" style="margin-top:8px;">Limpiar Filtros</button>
+                </form>
+            </div>
+
+            <!-- Resultados -->
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <h3 style="font-size:16px;" id="contadorResultados">Viajes Disponibles</h3>
+                </div>
+                <div id="listaResultados">
+                    <p style="color:var(--texto-gris); font-size:14px;">Cargando viajes...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal: Detalle y solicitud -->
+<div class="modal-overlay hidden" id="modalDetalle">
+    <div class="modal">
+        <button class="modal-close" id="btnCerrarModal">✕</button>
+        <h2>Detalle del Viaje</h2>
+
+        <!-- Reglas de seguridad RF9 -->
+        <div class="msg msg-info show" style="font-size:12px; margin-bottom:16px;">
+            <strong>📋 Reglas:</strong> Puntualidad · Respeto · No compartir datos personales
+        </div>
+
+        <div id="detalleContenido"></div>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="btnCancelarModal">Cancelar</button>
+            <button class="btn btn-primary" id="btnConfirmarSolicitud">Confirmar Solicitud</button>
+        </div>
+        <div id="msgModal" class="msg"></div>
+    </div>
+</div>
+
+<script type="module">
+    import { obtenerUsuarioActual, cerrarSesion, buscarViajes, enviarSolicitud } from '../Persistence/supabaseClient.js';
+
+    const usuario = obtenerUsuarioActual();
+    if (!usuario) { window.location.href = 'index.html'; }
+
+    document.getElementById('sidebarNombre').textContent = usuario.nombre;
+    document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    let viajeSeleccionado = null;
+
+    // Cargar viajes al inicio
+    cargar({});
+
+    async function cargar(filtros) {
+        const lista = document.getElementById('listaResultados');
+        lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">Buscando...</p>';
+
+        try {
+            const viajes = await buscarViajes(filtros);
+            document.getElementById('contadorResultados').textContent =
+                `${viajes.length} viaje(s) encontrado(s)`;
+
+            if (viajes.length === 0) {
+                lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">No se encontraron viajes con esos filtros.</p>';
+                return;
+            }
+
+            lista.innerHTML = viajes.map(v => `
+                <div class="viaje-card">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                                <div style="width:36px;height:36px;border-radius:50%;background:var(--azul-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">
+                                    ${(v.conductor?.nombre || 'C').charAt(0)}
+                                </div>
+                                <div>
+                                    <div style="font-weight:700;font-size:14px;">${v.conductor?.nombre || 'Conductor'}</div>
+                                    <div style="font-size:12px;color:var(--texto-gris);">
+                                        ⭐ ${v.conductor?.calificacion_prom || '—'} · ${v.conductor?.total_viajes || 0} viajes
+                                        ${v.conductor?.verificado ? '<span class="badge badge-verificado" style="margin-left:4px;">✔ Verificado</span>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="viaje-ruta">📍 ${v.origen} → ${v.destino}</div>
+                            <div class="viaje-meta">
+                                <span>📅 ${v.fecha}</span>
+                                <span>🕐 ${v.hora_salida}</span>
+                                <span>👥 ${v.cupos_disponibles} de ${v.cupos_total} disponibles</span>
+                            </div>
+                            ${v.notas ? `<p style="font-size:12px;color:var(--texto-gris);margin-top:4px;">📝 ${v.notas}</p>` : ''}
+                        </div>
+                        <div style="text-align:right; margin-left:16px;">
+                            <div style="font-size:22px;font-weight:800;color:var(--azul-primary);">$${v.precio_persona}</div>
+                            <div style="font-size:11px;color:var(--texto-gris);">por persona</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <button class="btn btn-primary btn-sm" onclick="abrirDetalle('${v.id}')">
+                            Ver Detalles y Solicitar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Guardar viajes en window para acceso desde onclick
+            window._viajes = viajes;
+        } catch (err) {
+            lista.innerHTML = `<p style="color:var(--rojo-error);font-size:14px;">${err.message}</p>`;
+        }
+    }
+
+    // Filtros
+    document.getElementById('formFiltros').addEventListener('submit', (e) => {
+        e.preventDefault();
+        cargar({
+            origen:  document.getElementById('fOrigen').value,
+            destino: document.getElementById('fDestino').value,
+            fecha:   document.getElementById('fFecha').value,
+            cupos:   document.getElementById('fCupos').value
+        });
+    });
+
+    document.getElementById('btnLimpiar').addEventListener('click', () => {
+        document.getElementById('formFiltros').reset();
+        cargar({});
+    });
+
+    // Modal detalle
+    window.abrirDetalle = function(viajeId) {
+        const v = window._viajes?.find(x => x.id === viajeId);
+        if (!v) return;
+        viajeSeleccionado = v;
+
+        document.getElementById('detalleContenido').innerHTML = `
+            <div style="background:var(--fondo-pagina);border-radius:8px;padding:14px;margin-bottom:14px;">
+                <div style="font-size:16px;font-weight:700;margin-bottom:8px;">📍 ${v.origen} → ${v.destino}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--texto-gris);">
+                    <span>📅 Fecha: <strong style="color:var(--texto-dark);">${v.fecha}</strong></span>
+                    <span>🕐 Hora: <strong style="color:var(--texto-dark);">${v.hora_salida}</strong></span>
+                    <span>👥 Asientos: <strong style="color:var(--texto-dark);">1</strong></span>
+                    <span>💵 Total: <strong style="color:var(--azul-primary);font-size:16px;">$${v.precio_persona}</strong></span>
+                </div>
+                ${v.notas ? `<p style="font-size:12px;margin-top:8px;color:var(--texto-gris);">📝 ${v.notas}</p>` : ''}
+            </div>
+            <div style="font-size:13px;color:var(--texto-gris);">
+                Conductor: <strong>${v.conductor?.nombre || '—'}</strong> · ⭐ ${v.conductor?.calificacion_prom || '—'}
+            </div>
+        `;
+
+        document.getElementById('msgModal').className = 'msg';
+        document.getElementById('btnConfirmarSolicitud').disabled = false;
+        document.getElementById('btnConfirmarSolicitud').textContent = 'Confirmar Solicitud';
+        document.getElementById('modalDetalle').classList.remove('hidden');
+    };
+
+    document.getElementById('btnCerrarModal').addEventListener('click', () =>
+        document.getElementById('modalDetalle').classList.add('hidden'));
+    document.getElementById('btnCancelarModal').addEventListener('click', () =>
+        document.getElementById('modalDetalle').classList.add('hidden'));
+
+    document.getElementById('btnConfirmarSolicitud').addEventListener('click', async () => {
+        if (!viajeSeleccionado) return;
+        const btn = document.getElementById('btnConfirmarSolicitud');
+        const msg = document.getElementById('msgModal');
+        btn.textContent = 'Enviando...';
+        btn.disabled    = true;
+
+        try {
+            await enviarSolicitud(viajeSeleccionado.id, usuario.id, 1);
+            msg.textContent = '✅ Solicitud enviada. El conductor revisará tu solicitud.';
+            msg.className   = 'msg show msg-success';
+            setTimeout(() => {
+                document.getElementById('modalDetalle').classList.add('hidden');
+                window.location.href = 'mis-solicitudes.html';
+            }, 1800);
+        } catch (err) {
+            msg.textContent = err.message;
+            msg.className   = 'msg show msg-error';
+            btn.textContent = 'Confirmar Solicitud';
+            btn.disabled    = false;
+        }
+    });
+</script>
+
+</body>
+</html>

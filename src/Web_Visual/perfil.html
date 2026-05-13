@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Mi Perfil</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🚗 U-Ride</h2>
+            <p>Viajes Seguros UTA</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
+            <a href="perfil.html" class="activo"><span class="icon">👤</span> Mi Perfil</a>
+            <div id="navConductor" style="display:none;">
+                <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
+                <a href="mis-viajes.html"><span class="icon">🗂️</span> Mis Viajes</a>
+                <a href="solicitudes.html"><span class="icon">📋</span> Solicitudes</a>
+            </div>
+            <div id="navPasajero">
+                <a href="buscar-viajes.html"><span class="icon">🔍</span> Buscar Viajes</a>
+                <a href="mis-solicitudes.html"><span class="icon">📄</span> Mis Solicitudes</a>
+            </div>
+            <div id="navAdmin" style="display:none;">
+                <a href="admin.html"><span class="icon">⚙️</span> Panel Admin</a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <strong id="sidebarNombre">Cargando...</strong>
+                <span id="sidebarRol"></span>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Mi Perfil</h1>
+            <p>Gestiona tu información personal</p>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 300px 1fr; gap:24px; align-items:start;">
+
+            <!-- Tarjeta de perfil -->
+            <div class="card" style="text-align:center;">
+                <div class="perfil-avatar" id="avatarLetras">?</div>
+                <h2 id="perfilNombre" style="font-size:20px; margin-bottom:4px;">—</h2>
+                <p id="perfilRol" style="font-size:13px; color:var(--texto-gris); margin-bottom:8px;">—</p>
+                <div id="perfilVerificado" class="badge-verificado" style="justify-content:center; margin-bottom:12px; display:none;">
+                    ✔ Verificado
+                </div>
+                <div class="estrellas" id="perfilEstrellas">—</div>
+                <p style="font-size:13px; color:var(--texto-gris); margin-top:4px;">
+                    <span id="perfilCalif">—</span> · <span id="perfilViajes">0</span> viajes
+                </p>
+                <hr class="divider">
+                <div style="text-align:left; font-size:13px; color:var(--texto-gris);">
+                    <p style="margin-bottom:6px;">📧 <span id="perfilEmail">—</span></p>
+                    <p style="margin-bottom:6px;">📞 <span id="perfilTelefono">—</span></p>
+                    <p style="margin-bottom:6px;">🎓 <span id="perfilCarrera">—</span></p>
+                    <p style="margin-bottom:6px;">📍 <span id="perfilZona">—</span></p>
+                    <p>🪪 Matrícula: <span id="perfilMatricula">—</span></p>
+                </div>
+            </div>
+
+            <!-- Formulario de edición -->
+            <div class="card">
+                <h2 style="font-size:18px; margin-bottom:4px;">Editar Perfil</h2>
+                <p style="font-size:13px; color:var(--texto-gris); margin-bottom:20px;">
+                    Actualiza tu nombre, teléfono, carrera y zona de referencia.
+                </p>
+
+                <form id="formPerfil">
+                    <div class="form-group">
+                        <label for="editNombre">Nombre Completo *</label>
+                        <input type="text" id="editNombre" required placeholder="Tu nombre completo">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editTelefono">Teléfono</label>
+                            <input type="tel" id="editTelefono" placeholder="+593 99 000 0000">
+                        </div>
+                        <div class="form-group">
+                            <label for="editCarrera">Carrera</label>
+                            <input type="text" id="editCarrera" placeholder="Ej: Ingeniería en Sistemas">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editZona">Zona / Barrio de Referencia</label>
+                        <input type="text" id="editZona" placeholder="Ej: Zona Norte, Cdla. España">
+                    </div>
+
+                    <hr class="divider">
+
+                    <h3 style="font-size:15px; margin-bottom:16px; color:var(--texto-dark);">Cambiar Contraseña</h3>
+                    <p style="font-size:12px; color:var(--texto-gris); margin-bottom:12px;">
+                        Deja en blanco si no deseas cambiar tu contraseña.
+                    </p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="passActual">Contraseña Actual</label>
+                            <input type="password" id="passActual" placeholder="Contraseña actual">
+                        </div>
+                        <div class="form-group">
+                            <label for="passNueva">Nueva Contraseña</label>
+                            <input type="password" id="passNueva" placeholder="Mínimo 6 caracteres" minlength="6">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="passConfirmar">Confirmar Nueva Contraseña</label>
+                        <input type="password" id="passConfirmar" placeholder="Repite la nueva contraseña">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar Cambios</button>
+                    <div id="msgPerfil" class="msg"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Calificaciones recibidas -->
+        <div class="card" style="margin-top:24px;">
+            <h2 style="font-size:18px; margin-bottom:16px;">Calificaciones Recibidas</h2>
+            <div id="listaCalificaciones">
+                <p style="color:var(--texto-gris); font-size:14px;">Cargando calificaciones...</p>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script type="module">
+    import {
+        obtenerUsuarioActual, cerrarSesion,
+        editarPerfil, supabase
+    } from '../Persistence/supabaseClient.js';
+
+    const usuario = obtenerUsuarioActual();
+    if (!usuario) { window.location.href = 'index.html'; }
+
+    // Sidebar
+    document.getElementById('sidebarNombre').textContent = usuario.nombre;
+    document.getElementById('sidebarRol').textContent    = usuario.rol;
+    document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    if (usuario.rol === 'conductor') document.getElementById('navConductor').style.display = 'block';
+    if (usuario.rol === 'admin')     document.getElementById('navAdmin').style.display     = 'block';
+
+    // Llenar tarjeta de perfil
+    function renderPerfil(u) {
+        const iniciales = u.nombre.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
+        document.getElementById('avatarLetras').textContent  = iniciales;
+        document.getElementById('perfilNombre').textContent  = u.nombre;
+        document.getElementById('perfilRol').textContent     = u.rol.charAt(0).toUpperCase() + u.rol.slice(1);
+        document.getElementById('perfilEmail').textContent   = u.email;
+        document.getElementById('perfilTelefono').textContent = u.telefono || 'No registrado';
+        document.getElementById('perfilCarrera').textContent  = u.carrera  || 'No registrada';
+        document.getElementById('perfilZona').textContent     = u.zona_referencia || 'No registrada';
+        document.getElementById('perfilMatricula').textContent = u.matricula || '—';
+        document.getElementById('perfilCalif').textContent    = u.calificacion_prom ? `⭐ ${u.calificacion_prom}` : 'Sin calificaciones';
+        document.getElementById('perfilViajes').textContent   = u.total_viajes || 0;
+
+        // Estrellas
+        const calif = u.calificacion_prom || 0;
+        const estrellas = '★'.repeat(Math.round(calif)) + '☆'.repeat(5 - Math.round(calif));
+        document.getElementById('perfilEstrellas').textContent = estrellas;
+
+        if (u.verificado) document.getElementById('perfilVerificado').style.display = 'flex';
+
+        // Llenar formulario
+        document.getElementById('editNombre').value   = u.nombre;
+        document.getElementById('editTelefono').value = u.telefono || '';
+        document.getElementById('editCarrera').value  = u.carrera  || '';
+        document.getElementById('editZona').value     = u.zona_referencia || '';
+    }
+
+    renderPerfil(usuario);
+
+    // Cargar calificaciones
+    async function cargarCalificaciones() {
+        const { data } = await supabase
+            .from('calificaciones')
+            .select('*, calificador:usuarios!calificador_id(nombre)')
+            .eq('calificado_id', usuario.id)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        const lista = document.getElementById('listaCalificaciones');
+        if (!data || data.length === 0) {
+            lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">Aún no tienes calificaciones.</p>';
+            return;
+        }
+        lista.innerHTML = data.map(c => `
+            <div style="padding:14px 0; border-bottom:1px solid var(--borde);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <strong style="font-size:14px;">${c.calificador?.nombre || 'Usuario'}</strong>
+                    <span class="estrellas" style="font-size:16px;">${'★'.repeat(c.puntuacion)}${'☆'.repeat(5 - c.puntuacion)}</span>
+                </div>
+                ${c.comentario ? `<p style="font-size:13px; color:var(--texto-gris);">${c.comentario}</p>` : ''}
+                <p style="font-size:11px; color:var(--texto-gris); margin-top:4px;">${new Date(c.created_at).toLocaleDateString('es-EC')}</p>
+            </div>
+        `).join('');
+    }
+
+    cargarCalificaciones();
+
+    // Guardar cambios de perfil
+    const form = document.getElementById('formPerfil');
+    const btn  = document.getElementById('btnGuardar');
+    const msg  = document.getElementById('msgPerfil');
+
+    function mostrar(texto, tipo) {
+        msg.textContent = texto;
+        msg.className   = `msg show msg-${tipo}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const passActual   = document.getElementById('passActual').value;
+        const passNueva    = document.getElementById('passNueva').value;
+        const passConfirmar = document.getElementById('passConfirmar').value;
+
+        // Validar cambio de contraseña si se llenó
+        if (passNueva || passConfirmar) {
+            if (!passActual) {
+                mostrar('Ingresa tu contraseña actual para cambiarla.', 'error');
+                return;
+            }
+            if (passNueva !== passConfirmar) {
+                mostrar('Las contraseñas nuevas no coinciden.', 'error');
+                return;
+            }
+            if (passNueva.length < 6) {
+                mostrar('La nueva contraseña debe tener al menos 6 caracteres.', 'error');
+                return;
+            }
+            // Verificar contraseña actual
+            const hashActual = btoa(`${passActual}_uta_salt`);
+            if (hashActual !== usuario.password_hash) {
+                mostrar('La contraseña actual es incorrecta.', 'error');
+                return;
+            }
+        }
+
+        btn.textContent = 'Guardando...';
+        btn.disabled    = true;
+        msg.className   = 'msg';
+
+        try {
+            // Actualizar perfil
+            const actualizado = await editarPerfil(usuario.id, {
+                nombre:   document.getElementById('editNombre').value,
+                telefono: document.getElementById('editTelefono').value,
+                carrera:  document.getElementById('editCarrera').value,
+                zona:     document.getElementById('editZona').value
+            });
+
+            // Cambiar contraseña si se solicitó
+            if (passNueva) {
+                await supabase
+                    .from('usuarios')
+                    .update({ password_hash: btoa(`${passNueva}_uta_salt`) })
+                    .eq('id', usuario.id);
+
+                // Actualizar sesion local con nuevo hash
+                actualizado.password_hash = btoa(`${passNueva}_uta_salt`);
+                localStorage.setItem('uride_usuario', JSON.stringify(actualizado));
+            }
+
+            renderPerfil(actualizado);
+            mostrar('✅ Perfil actualizado correctamente.', 'success');
+
+            // Limpiar campos de contraseña
+            document.getElementById('passActual').value   = '';
+            document.getElementById('passNueva').value    = '';
+            document.getElementById('passConfirmar').value = '';
+
+        } catch (err) {
+            mostrar(err.message, 'error');
+        } finally {
+            btn.textContent = 'Guardar Cambios';
+            btn.disabled    = false;
+        }
+    });
+</script>
+
+</body>
+</html>

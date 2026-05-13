@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Recuperar Contraseña</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-card">
+    <div class="auth-logo">🔐</div>
+    <h1>Recuperar Contraseña</h1>
+    <p class="subtitle">Ingresa tu correo institucional y te enviaremos un código.</p>
+
+    <!-- Paso 1: Solicitar codigo -->
+    <div id="paso1">
+        <form id="formSolicitar">
+            <div class="form-group">
+                <label for="emailRecup">Correo Institucional</label>
+                <input type="email" id="emailRecup" placeholder="usuario@uta.edu.ec" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="btnSolicitar">Enviar Código</button>
+            <div id="msgSolicitar" class="msg"></div>
+        </form>
+    </div>
+
+    <!-- Paso 2: Ingresar codigo y nueva contrasena -->
+    <div id="paso2" style="display:none;">
+        <div id="codigoDemoRecup" class="msg msg-info show" style="margin-bottom:16px; font-size:13px;"></div>
+
+        <form id="formRestablecer">
+            <div class="form-group">
+                <label>Código de 6 dígitos</label>
+                <div class="codigo-inputs" id="codigoInputsRecup">
+                    <input type="text" maxlength="1" inputmode="numeric">
+                    <input type="text" maxlength="1" inputmode="numeric">
+                    <input type="text" maxlength="1" inputmode="numeric">
+                    <input type="text" maxlength="1" inputmode="numeric">
+                    <input type="text" maxlength="1" inputmode="numeric">
+                    <input type="text" maxlength="1" inputmode="numeric">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nuevaPass">Nueva Contraseña</label>
+                <input type="password" id="nuevaPass" placeholder="Mínimo 6 caracteres" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="confirmarPass">Confirmar Nueva Contraseña</label>
+                <input type="password" id="confirmarPass" placeholder="Repite la contraseña" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btnRestablecer">Restablecer Contraseña</button>
+            <div id="msgRestablecer" class="msg"></div>
+        </form>
+    </div>
+
+    <hr class="divider">
+    <p class="auth-footer"><a href="index.html">← Volver al inicio de sesión</a></p>
+</div>
+
+<script type="module">
+    import { solicitarRecuperacion, restablecerContrasena } from '../Persistence/supabaseClient.js';
+
+    // ── Paso 1 ──
+    const formSolicitar = document.getElementById('formSolicitar');
+    const btnSolicitar  = document.getElementById('btnSolicitar');
+    const msgSolicitar  = document.getElementById('msgSolicitar');
+
+    function mostrar(el, texto, tipo) {
+        el.textContent = texto;
+        el.className   = `msg show msg-${tipo}`;
+    }
+
+    formSolicitar.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        btnSolicitar.textContent = 'Enviando...';
+        btnSolicitar.disabled    = true;
+        msgSolicitar.className   = 'msg';
+
+        const email = document.getElementById('emailRecup').value;
+
+        try {
+            await solicitarRecuperacion(email);
+            const codigoDemo = sessionStorage.getItem('uride_codigo_demo');
+            mostrar(msgSolicitar, `✅ Código enviado. Demo: ${codigoDemo}`, 'success');
+
+            document.getElementById('codigoDemoRecup').textContent =
+                `🔑 Código demo: ${codigoDemo}`;
+
+            setTimeout(() => {
+                document.getElementById('paso1').style.display = 'none';
+                document.getElementById('paso2').style.display = 'block';
+            }, 1500);
+        } catch (err) {
+            mostrar(msgSolicitar, err.message, 'error');
+            btnSolicitar.textContent = 'Enviar Código';
+            btnSolicitar.disabled    = false;
+        }
+    });
+
+    // ── Navegacion inputs codigo ──
+    const inputs = document.querySelectorAll('#codigoInputsRecup input');
+    inputs.forEach((inp, i) => {
+        inp.addEventListener('input', () => {
+            inp.value = inp.value.replace(/\D/g, '');
+            if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+        });
+        inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i - 1].focus();
+        });
+    });
+
+    // ── Paso 2 ──
+    const formRestablecer = document.getElementById('formRestablecer');
+    const btnRestablecer  = document.getElementById('btnRestablecer');
+    const msgRestablecer  = document.getElementById('msgRestablecer');
+
+    formRestablecer.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const codigo   = Array.from(inputs).map(i => i.value).join('');
+        const nueva    = document.getElementById('nuevaPass').value;
+        const confirmar = document.getElementById('confirmarPass').value;
+
+        if (codigo.length < 6) {
+            mostrar(msgRestablecer, 'Ingresa los 6 dígitos.', 'error');
+            return;
+        }
+
+        if (nueva !== confirmar) {
+            mostrar(msgRestablecer, 'Las contraseñas no coinciden.', 'error');
+            return;
+        }
+
+        const email = sessionStorage.getItem('uride_email_recuperar');
+        if (!email) {
+            mostrar(msgRestablecer, 'Sesión expirada. Vuelve a solicitar el código.', 'error');
+            return;
+        }
+
+        btnRestablecer.textContent = 'Restableciendo...';
+        btnRestablecer.disabled    = true;
+
+        try {
+            await restablecerContrasena(email, codigo, nueva);
+            mostrar(msgRestablecer, '✅ Contraseña restablecida. Redirigiendo...', 'success');
+            sessionStorage.removeItem('uride_codigo_demo');
+            sessionStorage.removeItem('uride_email_recuperar');
+            setTimeout(() => window.location.href = 'index.html', 1500);
+        } catch (err) {
+            mostrar(msgRestablecer, err.message, 'error');
+            btnRestablecer.textContent = 'Restablecer Contraseña';
+            btnRestablecer.disabled    = false;
+        }
+    });
+</script>
+
+</body>
+</html>

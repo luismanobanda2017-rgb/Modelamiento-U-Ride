@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Publicar Viaje</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo"><h2>🚗 U-Ride</h2><p>Viajes Seguros UTA</p></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
+            <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="publicar-viaje.html" class="activo"><span class="icon">➕</span> Publicar Viaje</a>
+            <a href="mis-viajes.html"><span class="icon">🗂️</span> Mis Viajes</a>
+            <a href="solicitudes.html"><span class="icon">📋</span> Solicitudes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info"><strong id="sidebarNombre">—</strong></div>
+            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Publicar Nuevo Viaje</h1>
+            <p>Completa la información para que los pasajeros puedan encontrarte</p>
+        </div>
+
+        <div class="card" style="max-width:600px;">
+            <!-- Reglas de seguridad (RF9) -->
+            <div class="msg msg-info show" style="margin-bottom:20px; font-size:13px;">
+                <strong>📋 Reglas mínimas de seguridad:</strong><br>
+                • Sé puntual — respeta el horario publicado.<br>
+                • Trato respetuoso con todos los pasajeros.<br>
+                • No compartas datos personales fuera de la plataforma.<br>
+                • Máximo $5 USD por persona (tarifa referencial).
+            </div>
+
+            <form id="formPublicar">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="origen">📍 Punto de Salida *</label>
+                        <input type="text" id="origen" placeholder="Ej: Campus Central, Biblioteca" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="destino">🏁 Destino *</label>
+                        <input type="text" id="destino" placeholder="Ej: Zona Norte, Centro Histórico" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fecha">📅 Fecha *</label>
+                        <input type="date" id="fecha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hora">🕐 Hora de Salida *</label>
+                        <input type="time" id="hora" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cupos">👥 Asientos Disponibles *</label>
+                        <select id="cupos" required>
+                            <option value="">Selecciona</option>
+                            <option value="1">1 asiento</option>
+                            <option value="2">2 asientos</option>
+                            <option value="3">3 asientos</option>
+                            <option value="4">4 asientos</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="precio">💵 Precio por Persona (USD)</label>
+                        <input type="number" id="precio" placeholder="0" min="0" max="5" step="0.5" value="0">
+                        <small style="color:var(--texto-gris); font-size:11px;">Máximo $5 USD</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ruta">🗺️ Ruta (Opcional)</label>
+                    <input type="text" id="ruta" placeholder="Ej: Ruta directa por Av. Principal">
+                </div>
+
+                <div class="form-group">
+                    <label for="notas">📝 Notas Adicionales (Opcional)</label>
+                    <textarea id="notas" rows="3" placeholder="Ej: Salida puntual, favor estar 5 min antes. Viaje con A/C."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnPublicar">Publicar Viaje</button>
+                <div id="msgPublicar" class="msg"></div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script type="module">
+    import { obtenerUsuarioActual, cerrarSesion, publicarViaje } from '../Persistence/supabaseClient.js';
+
+    const usuario = obtenerUsuarioActual();
+    if (!usuario) { window.location.href = 'index.html'; }
+    if (usuario.rol !== 'conductor') { window.location.href = 'dashboard.html'; }
+
+    document.getElementById('sidebarNombre').textContent = usuario.nombre;
+    document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    // Fecha mínima = hoy
+    document.getElementById('fecha').min = new Date().toISOString().split('T')[0];
+
+    const form = document.getElementById('formPublicar');
+    const btn  = document.getElementById('btnPublicar');
+    const msg  = document.getElementById('msgPublicar');
+
+    function mostrar(texto, tipo) {
+        msg.textContent = texto;
+        msg.className   = `msg show msg-${tipo}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const precio = parseFloat(document.getElementById('precio').value) || 0;
+        if (precio > 5) { mostrar('El precio máximo es $5 USD.', 'error'); return; }
+
+        btn.textContent = 'Publicando...';
+        btn.disabled    = true;
+        msg.className   = 'msg';
+
+        try {
+            await publicarViaje({
+                conductorId: usuario.id,
+                origen:  document.getElementById('origen').value,
+                destino: document.getElementById('destino').value,
+                fecha:   document.getElementById('fecha').value,
+                hora:    document.getElementById('hora').value,
+                cupos:   document.getElementById('cupos').value,
+                precio,
+                ruta:    document.getElementById('ruta').value,
+                notas:   document.getElementById('notas').value
+            });
+
+            mostrar('✅ Viaje publicado exitosamente. Redirigiendo...', 'success');
+            setTimeout(() => window.location.href = 'mis-viajes.html', 1500);
+        } catch (err) {
+            mostrar(err.message, 'error');
+            btn.textContent = 'Publicar Viaje';
+            btn.disabled    = false;
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Mis Viajes</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo"><h2>🚗 U-Ride</h2><p>Viajes Seguros UTA</p></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
+            <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
+            <a href="mis-viajes.html" class="activo"><span class="icon">🗂️</span> Mis Viajes</a>
+            <a href="solicitudes.html"><span class="icon">📋</span> Solicitudes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info"><strong id="sidebarNombre">—</strong></div>
+            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Mis Viajes Publicados</h1>
+            <p>Gestiona tus viajes activos y pasados</p>
+        </div>
+
+        <div id="listaViajes">
+            <p style="color:var(--texto-gris);font-size:14px;">Cargando...</p>
+        </div>
+    </main>
+</div>
+
+<!-- Modal cancelar -->
+<div class="modal-overlay hidden" id="modalCancelar">
+    <div class="modal">
+        <h2>Cancelar Viaje</h2>
+        <p>¿Estás seguro de cancelar este viaje? Los pasajeros serán notificados.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="btnNoCancelar">No, mantener</button>
+            <button class="btn btn-danger" id="btnSiCancelar">Sí, cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { obtenerUsuarioActual, cerrarSesion, supabase, registrarEvento } from '../Persistence/supabaseClient.js';
+
+    const usuario = obtenerUsuarioActual();
+    if (!usuario) { window.location.href = 'index.html'; }
+    if (usuario.rol !== 'conductor') { window.location.href = 'dashboard.html'; }
+
+    document.getElementById('sidebarNombre').textContent = usuario.nombre;
+    document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    let viajeACancelar = null;
+
+    async function cargar() {
+        const { data } = await supabase
+            .from('viajes')
+            .select('*, solicitudes(id, estado)')
+            .eq('conductor_id', usuario.id)
+            .order('fecha', { ascending: false });
+
+        const lista = document.getElementById('listaViajes');
+
+        if (!data || data.length === 0) {
+            lista.innerHTML = `
+                <div class="card" style="text-align:center;padding:40px;">
+                    <div style="font-size:48px;margin-bottom:12px;">🚗</div>
+                    <p style="color:var(--texto-gris);font-size:14px;">No has publicado viajes aún.</p>
+                    <a href="publicar-viaje.html" class="btn btn-primary" style="margin-top:16px;display:inline-block;width:auto;padding:10px 24px;">Publicar Viaje</a>
+                </div>
+            `;
+            return;
+        }
+
+        lista.innerHTML = data.map(v => {
+            const pendientes = v.solicitudes?.filter(s => s.estado === 'pendiente').length || 0;
+            const aceptadas  = v.solicitudes?.filter(s => s.estado === 'aceptada').length  || 0;
+
+            return `
+                <div class="card" style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div>
+                            <div class="viaje-ruta">📍 ${v.origen} → ${v.destino}</div>
+                            <div class="viaje-meta">
+                                <span>📅 ${v.fecha}</span>
+                                <span>🕐 ${v.hora_salida}</span>
+                                <span>👥 ${v.cupos_disponibles}/${v.cupos_total} cupos</span>
+                                <span>💵 $${v.precio_persona}/persona</span>
+                            </div>
+                            ${v.notas ? `<p style="font-size:12px;color:var(--texto-gris);margin-top:4px;">📝 ${v.notas}</p>` : ''}
+                        </div>
+                        <span class="badge badge-${v.estado}">${v.estado}</span>
+                    </div>
+
+                    <div style="display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--texto-gris);">
+                        <span>⏳ ${pendientes} pendiente(s)</span>
+                        <span>✅ ${aceptadas} confirmado(s)</span>
+                    </div>
+
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                        <a href="solicitudes.html" class="btn btn-secondary btn-sm">Ver Solicitudes</a>
+                        ${v.estado === 'disponible' ? `
+                            <button class="btn btn-danger btn-sm" onclick="confirmarCancelar('${v.id}')">
+                                Cancelar Viaje
+                            </button>
+                            ${v.cupos_disponibles === 0 ? `
+                                <button class="btn btn-primary btn-sm" onclick="finalizarViaje('${v.id}')">
+                                    Finalizar Viaje
+                                </button>
+                            ` : ''}
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.confirmarCancelar = function(viajeId) {
+        viajeACancelar = viajeId;
+        document.getElementById('modalCancelar').classList.remove('hidden');
+    };
+
+    document.getElementById('btnNoCancelar').addEventListener('click', () =>
+        document.getElementById('modalCancelar').classList.add('hidden'));
+
+    document.getElementById('btnSiCancelar').addEventListener('click', async () => {
+        if (!viajeACancelar) return;
+        await supabase.from('viajes').update({ estado: 'cancelado' }).eq('id', viajeACancelar);
+        await registrarEvento(usuario.id, 'cancelacion_viaje', 'Viaje cancelado', viajeACancelar);
+        document.getElementById('modalCancelar').classList.add('hidden');
+        cargar();
+    });
+
+    window.finalizarViaje = async function(viajeId) {
+        if (!confirm('¿Marcar este viaje como finalizado?')) return;
+        await supabase.from('viajes').update({ estado: 'finalizado' }).eq('id', viajeId);
+        await registrarEvento(usuario.id, 'finalizacion_viaje', 'Viaje finalizado', viajeId);
+        cargar();
+    };
+
+    cargar();
+</script>
+
+</body>
+</html>

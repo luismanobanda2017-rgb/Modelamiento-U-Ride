@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Verificar Correo</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-card">
+    <div class="auth-logo">📧</div>
+    <h1>Verifica tu Correo</h1>
+    <p class="subtitle" id="subtitleVerif">
+        Ingresa el código de 6 dígitos enviado a tu correo institucional.
+    </p>
+
+    <div id="codigoDemoBox" class="msg msg-info show" style="margin-bottom:16px; font-size:13px;">
+        Cargando código demo...
+    </div>
+
+    <form id="formVerificar">
+        <div class="codigo-inputs" id="codigoInputs">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btnVerificar">Verificar Código</button>
+        <div id="msgVerif" class="msg"></div>
+    </form>
+
+    <hr class="divider">
+    <p class="auth-footer"><a href="index.html">← Volver al inicio de sesión</a></p>
+</div>
+
+<script type="module">
+    import { verificarCodigo } from '../Persistence/supabaseClient.js';
+
+    const email     = sessionStorage.getItem('uride_email_verificar') || sessionStorage.getItem('uride_email_recuperar');
+    const codigoDemo = sessionStorage.getItem('uride_codigo_demo');
+    const demoBox   = document.getElementById('codigoDemoBox');
+    const subtitle  = document.getElementById('subtitleVerif');
+
+    if (email) {
+        subtitle.textContent = `Ingresa el código enviado a ${email}`;
+    }
+
+    if (codigoDemo) {
+        demoBox.textContent = `🔑 Código demo (simula el email): ${codigoDemo}`;
+    } else {
+        demoBox.style.display = 'none';
+    }
+
+    // Navegacion entre inputs
+    const inputs = document.querySelectorAll('.codigo-inputs input');
+    inputs.forEach((inp, i) => {
+        inp.addEventListener('input', () => {
+            inp.value = inp.value.replace(/\D/g, '');
+            if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+        });
+        inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i - 1].focus();
+        });
+    });
+
+    const form = document.getElementById('formVerificar');
+    const btn  = document.getElementById('btnVerificar');
+    const msg  = document.getElementById('msgVerif');
+
+    function mostrar(texto, tipo) {
+        msg.textContent = texto;
+        msg.className   = `msg show msg-${tipo}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const codigo = Array.from(inputs).map(i => i.value).join('');
+        if (codigo.length < 6) {
+            mostrar('Ingresa los 6 dígitos del código.', 'error');
+            return;
+        }
+
+        if (!email) {
+            mostrar('No se encontró el correo. Vuelve a registrarte.', 'error');
+            return;
+        }
+
+        btn.textContent = 'Verificando...';
+        btn.disabled    = true;
+
+        try {
+            await verificarCodigo(email, codigo);
+            mostrar('✅ Correo verificado. Redirigiendo...', 'success');
+            sessionStorage.removeItem('uride_codigo_demo');
+            sessionStorage.removeItem('uride_email_verificar');
+            setTimeout(() => window.location.href = 'dashboard.html', 1200);
+        } catch (err) {
+            mostrar(err.message, 'error');
+            btn.textContent = 'Verificar Código';
+            btn.disabled    = false;
+        }
+    });
+</script>
+
+</body>
+</html>

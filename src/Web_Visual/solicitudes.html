@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Gestionar Solicitudes</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo"><h2>🚗 U-Ride</h2><p>Viajes Seguros UTA</p></div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
+            <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
+            <a href="mis-viajes.html"><span class="icon">🗂️</span> Mis Viajes</a>
+            <a href="solicitudes.html" class="activo"><span class="icon">📋</span> Solicitudes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info"><strong id="sidebarNombre">—</strong></div>
+            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Solicitudes de Pasajeros</h1>
+            <p>Acepta o rechaza las solicitudes de tus viajes</p>
+        </div>
+
+        <div id="contenidoSolicitudes">
+            <p style="color:var(--texto-gris);font-size:14px;">Cargando solicitudes...</p>
+        </div>
+    </main>
+</div>
+
+<!-- Modal calificar -->
+<div class="modal-overlay hidden" id="modalCalificar">
+    <div class="modal">
+        <button class="modal-close" id="btnCerrarCalif">✕</button>
+        <h2>Calificar Pasajero</h2>
+        <p id="nombreCalificado">—</p>
+        <div style="margin:16px 0;">
+            <label style="font-size:14px;font-weight:600;display:block;margin-bottom:8px;">Calificación</label>
+            <div id="starsCalif" style="display:flex;gap:8px;font-size:32px;cursor:pointer;">
+                <span data-val="1">☆</span>
+                <span data-val="2">☆</span>
+                <span data-val="3">☆</span>
+                <span data-val="4">☆</span>
+                <span data-val="5">☆</span>
+            </div>
+            <input type="hidden" id="califValor" value="0">
+        </div>
+        <div class="form-group">
+            <label for="califComentario">Comentario (opcional)</label>
+            <textarea id="califComentario" rows="3" placeholder="Comparte tu experiencia..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="btnCancelarCalif">Cancelar</button>
+            <button class="btn btn-primary" id="btnEnviarCalif">Enviar Calificación</button>
+        </div>
+        <div id="msgCalif" class="msg"></div>
+    </div>
+</div>
+
+<script type="module">
+    import {
+        obtenerUsuarioActual, cerrarSesion,
+        responderSolicitud, calificar, supabase
+    } from '../Persistence/supabaseClient.js';
+
+    const usuario = obtenerUsuarioActual();
+    if (!usuario) { window.location.href = 'index.html'; }
+    if (usuario.rol !== 'conductor') { window.location.href = 'dashboard.html'; }
+
+    document.getElementById('sidebarNombre').textContent = usuario.nombre;
+    document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    let califData = null;
+
+    async function cargar() {
+        const { data: viajes } = await supabase
+            .from('viajes')
+            .select(`*, solicitudes(*, pasajero:usuarios!pasajero_id(id, nombre, email, calificacion_prom, verificado))`)
+            .eq('conductor_id', usuario.id)
+            .in('estado', ['disponible', 'completo', 'finalizado'])
+            .order('fecha', { ascending: true });
+
+        const contenido = document.getElementById('contenidoSolicitudes');
+
+        if (!viajes || viajes.length === 0) {
+            contenido.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">No tienes viajes publicados aún.</p>';
+            return;
+        }
+
+        let html = '';
+        for (const v of viajes) {
+            const pendientes = v.solicitudes?.filter(s => s.estado === 'pendiente') || [];
+            const aceptadas  = v.solicitudes?.filter(s => s.estado === 'aceptada')  || [];
+
+            html += `
+                <div class="card" style="margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <div>
+                            <div class="viaje-ruta">📍 ${v.origen} → ${v.destino}</div>
+                            <div class="viaje-meta">
+                                <span>📅 ${v.fecha} ${v.hora_salida}</span>
+                                <span>👥 ${v.cupos_disponibles}/${v.cupos_total} cupos</span>
+                            </div>
+                        </div>
+                        <span class="badge badge-${v.estado}">${v.estado}</span>
+                    </div>
+            `;
+
+            if (pendientes.length > 0) {
+                html += `
+                    <div class="msg msg-info show" style="margin-bottom:12px;font-size:13px;">
+                        ⏳ ${pendientes.length} solicitud(es) pendiente(s)
+                    </div>
+                `;
+                for (const s of pendientes) {
+                    html += `
+                        <div style="border:1px solid var(--borde);border-radius:8px;padding:14px;margin-bottom:10px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <div style="font-weight:700;font-size:14px;">${s.pasajero?.nombre || '—'}</div>
+                                    <div style="font-size:12px;color:var(--texto-gris);">
+                                        ⭐ ${s.pasajero?.calificacion_prom || '—'}
+                                        ${s.pasajero?.verificado ? '· ✔ Verificado' : ''}
+                                        · Solicitó ${s.asientos} asiento(s)
+                                    </div>
+                                    <div style="font-size:11px;color:var(--texto-gris);">${new Date(s.created_at).toLocaleString('es-EC')}</div>
+                                </div>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="btn btn-primary btn-sm" onclick="responder('${s.id}', 'aceptar')">✔ Aceptar</button>
+                                    <button class="btn btn-danger btn-sm" onclick="responder('${s.id}', 'rechazar')">✕ Rechazar</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            if (aceptadas.length > 0) {
+                html += `<div style="font-size:13px;font-weight:600;margin:10px 0 8px;color:var(--verde-ok);">✅ Pasajeros Confirmados</div>`;
+                for (const s of aceptadas) {
+                    html += `
+                        <div style="border:1px solid #C8E6C9;border-radius:8px;padding:12px;margin-bottom:8px;background:#F1F8E9;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <div style="font-weight:700;font-size:14px;">${s.pasajero?.nombre || '—'}</div>
+                                    <div style="font-size:12px;color:var(--texto-gris);">${s.pasajero?.email || ''}</div>
+                                </div>
+                                ${v.estado === 'finalizado' ? `
+                                    <button class="btn btn-secondary btn-sm" onclick="abrirCalificar('${s.pasajero?.id}', '${s.pasajero?.nombre}', '${v.id}')">
+                                        ⭐ Calificar
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            if (!pendientes.length && !aceptadas.length) {
+                html += '<p style="color:var(--texto-gris);font-size:13px;">Sin solicitudes aún.</p>';
+            }
+
+            html += '</div>';
+        }
+
+        contenido.innerHTML = html;
+    }
+
+    window.responder = async function(solicitudId, accion) {
+        try {
+            await responderSolicitud(solicitudId, accion, usuario.id);
+            cargar();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    // Calificación
+    window.abrirCalificar = function(pasajeroId, nombre, viajeId) {
+        califData = { pasajeroId, viajeId };
+        document.getElementById('nombreCalificado').textContent = `Califica a ${nombre}`;
+        document.getElementById('califValor').value = '0';
+        document.getElementById('califComentario').value = '';
+        document.getElementById('msgCalif').className = 'msg';
+        resetStars();
+        document.getElementById('modalCalificar').classList.remove('hidden');
+    };
+
+    function resetStars() {
+        document.querySelectorAll('#starsCalif span').forEach(s => s.textContent = '☆');
+    }
+
+    document.querySelectorAll('#starsCalif span').forEach(star => {
+        star.addEventListener('click', () => {
+            const val = parseInt(star.dataset.val);
+            document.getElementById('califValor').value = val;
+            document.querySelectorAll('#starsCalif span').forEach((s, i) => {
+                s.textContent = i < val ? '★' : '☆';
+                s.style.color = i < val ? 'var(--amarillo)' : 'var(--texto-gris)';
+            });
+        });
+    });
+
+    document.getElementById('btnCerrarCalif').addEventListener('click', () =>
+        document.getElementById('modalCalificar').classList.add('hidden'));
+    document.getElementById('btnCancelarCalif').addEventListener('click', () =>
+        document.getElementById('modalCalificar').classList.add('hidden'));
+
+    document.getElementById('btnEnviarCalif').addEventListener('click', async () => {
+        const puntuacion = parseInt(document.getElementById('califValor').value);
+        if (!puntuacion) { alert('Selecciona una calificación.'); return; }
+
+        const btn = document.getElementById('btnEnviarCalif');
+        const msg = document.getElementById('msgCalif');
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+
+        try {
+            await calificar({
+                viajeId:       califData.viajeId,
+                calificadorId: usuario.id,
+                calificadoId:  califData.pasajeroId,
+                puntuacion,
+                comentario:    document.getElementById('califComentario').value,
+                tipo:          'conductor_a_pasajero'
+            });
+            msg.textContent = '✅ Calificación enviada.';
+            msg.className   = 'msg show msg-success';
+            setTimeout(() => document.getElementById('modalCalificar').classList.add('hidden'), 1500);
+        } catch (err) {
+            msg.textContent = err.message;
+            msg.className   = 'msg show msg-error';
+            btn.disabled    = false;
+            btn.textContent = 'Enviar Calificación';
+        }
+    });
+
+    cargar();
+</script>
+
+</body>
+</html>

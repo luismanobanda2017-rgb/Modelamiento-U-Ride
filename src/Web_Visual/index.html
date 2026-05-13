@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Iniciar Sesión</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-card">
+    <div class="auth-logo">🚗</div>
+    <h1>U-Ride</h1>
+    <p class="subtitle">Viajes Seguros Universitarios</p>
+    <div class="badge-verificado">✔ Plataforma Verificada UTA</div>
+
+    <form id="formLogin">
+        <div class="form-group">
+            <label for="email">Correo Institucional</label>
+            <input type="email" id="email" placeholder="usuario@uta.edu.ec" required autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <div style="text-align:right; margin-bottom:16px;">
+            <a href="recuperar.html" style="font-size:13px; color:var(--azul-primary); text-decoration:none; font-weight:600;">
+                ¿Olvidaste tu contraseña?
+            </a>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btnLogin">Iniciar Sesión</button>
+
+        <div id="msgLogin" class="msg"></div>
+    </form>
+
+    <hr class="divider">
+
+    <p class="auth-footer">¿No tienes cuenta? <a href="registro.html">Regístrate aquí</a></p>
+
+    <p style="margin-top:16px; font-size:11px; color:var(--texto-gris);">
+        Cuentas de prueba:<br>
+        <strong>Admin:</strong> admin@uta.edu.ec<br>
+        <strong>Conductor:</strong> carlos.mendez@uta.edu.ec<br>
+        <strong>Pasajero:</strong> maria.gonzalez@uta.edu.ec<br>
+        <em>Contraseña: 123456</em>
+    </p>
+</div>
+
+<script type="module">
+    import { iniciarSesion, obtenerUsuarioActual } from '../Persistence/supabaseClient.js';
+
+    // Si ya hay sesion activa, redirigir
+    if (obtenerUsuarioActual()) {
+        window.location.href = 'dashboard.html';
+    }
+
+    const form   = document.getElementById('formLogin');
+    const btn    = document.getElementById('btnLogin');
+    const msg    = document.getElementById('msgLogin');
+
+    function mostrar(texto, tipo) {
+        msg.textContent = texto;
+        msg.className   = `msg show msg-${tipo}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        btn.textContent = 'Ingresando...';
+        btn.disabled    = true;
+        msg.className   = 'msg';
+
+        const email    = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            await iniciarSesion(email, password);
+            mostrar('Bienvenido/a. Redirigiendo...', 'success');
+            setTimeout(() => window.location.href = 'dashboard.html', 900);
+        } catch (err) {
+            if (err.message === 'PENDIENTE_VERIFICACION') {
+                mostrar('Tu correo no está verificado. Redirigiendo...', 'info');
+                setTimeout(() => window.location.href = 'verificar.html', 1200);
+            } else {
+                mostrar(err.message, 'error');
+                btn.textContent = 'Iniciar Sesión';
+                btn.disabled    = false;
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
