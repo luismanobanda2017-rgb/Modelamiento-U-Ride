@@ -14,7 +14,7 @@ Materia: **Modelamiento y Diseño de Software** · Ciclo Enero 2026 – Julio 20
 
 ## Sitio público
 
-GitHub Pages: `https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/`
+🌐 **[https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/](https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/)**
 
 El `index.html` de la raíz redirige a `src/Web_Visual/index.html`
 
