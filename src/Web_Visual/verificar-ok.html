@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Ride - Correo Verificado</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-card" style="text-align:center;">
+    <div style="font-size:64px; margin-bottom:16px;">✅</div>
+    <h1 style="color:var(--verde-ok);">¡Correo Verificado!</h1>
+    <p class="subtitle">Tu cuenta ha sido verificada exitosamente. Ya puedes iniciar sesión en U-Ride.</p>
+
+    <div id="msgVerif" class="msg msg-success show" style="margin:20px 0;">
+        Verificando tu cuenta...
+    </div>
+
+    <a href="index.html" class="btn btn-primary" style="margin-top:8px;">Ir al Inicio de Sesión</a>
+</div>
+
+<script type="module">
+    import { supabase } from '../Persistence/supabaseClient.js';
+
+    // Supabase maneja el token automaticamente
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+            // Actualizar estado en nuestra tabla
+            await supabase
+                .from('usuarios')
+                .update({ verificado: true, estado: 'activo' })
+                .eq('id', session.user.id);
+
+            document.getElementById('msgVerif').textContent =
+                '✅ Cuenta activada. Redirigiendo al inicio de sesión...';
+
+            setTimeout(() => window.location.href = 'index.html', 2500);
+        }
+    });
+</script>
+
+</body>
+</html>

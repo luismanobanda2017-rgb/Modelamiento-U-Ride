@@ -123,15 +123,13 @@
                 matricula: document.getElementById('matricula').value
             });
 
-            mostrar('✅ Cuenta creada. Revisa tu correo para el código de verificación.', 'success');
+            mostrar('✅ Cuenta creada. Revisa tu correo @uta.edu.ec — te enviamos un link de verificación.', 'success');
 
-            // Mostrar codigo demo en pantalla (en produccion llegaria por email)
-            const codigoDemo = sessionStorage.getItem('uride_codigo_demo');
-            if (codigoDemo) {
-                mostrar(`✅ Cuenta creada. Código de verificación (demo): ${codigoDemo}`, 'success');
-            }
-
-            setTimeout(() => window.location.href = 'verificar.html', 2500);
+            // Limpiar formulario
+            form.reset();
+            document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('activo'));
+            document.querySelector('[data-rol="pasajero"]').classList.add('activo');
+            rolInput.value = 'pasajero';
         } catch (err) {
             mostrar(err.message, 'error');
             btn.textContent = 'Crear Cuenta';

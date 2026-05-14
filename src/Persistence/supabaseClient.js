@@ -1,45 +1,39 @@
 // ============================================================
 // U-Ride UTA - supabaseClient.js
 // Capa de Persistencia: conexion a Supabase
+// Auth: supabase.auth (correos reales via SMTP Gmail)
 // Proyecto: qwszgjivoknjhhswiatz
 // ============================================================
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-const SUPABASE_URL  = 'https://qwszgjivoknjhhswiatz.supabase.co';
+const SUPABASE_URL     = 'https://qwszgjivoknjhhswiatz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c3pnaml2b2tuamhoc3dpYXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTczNzYsImV4cCI6MjA5NDA5MzM3Nn0.IjQ9PWCIQe6owRAzS3jV-i-Xhi65Zj3eQcGi0D4utxI';
 
-// La anon public key puede vivir en frontend si las politicas RLS estan bien configuradas.
-// Nunca pongas aqui la service_role key.
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ── Utilidades ──────────────────────────────────────────────
+// URL base para redirecciones de auth (GitHub Pages)
+const SITE_URL = 'https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/src/Web_Visual';
 
-function crearPasswordHash(password) {
-    return btoa(`${password}_uta_salt`);
-}
-
-function generarCodigo6() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-// ── Sesion local ────────────────────────────────────────────
+// ── Sesion local ─────────────────────────────────────────────
 
 export function obtenerUsuarioActual() {
     const raw = localStorage.getItem('uride_usuario');
     return raw ? JSON.parse(raw) : null;
 }
 
-export function cerrarSesion() {
-    localStorage.removeItem('uride_usuario');
-    window.location.href = 'index.html';
-}
-
 function guardarSesion(usuario) {
     localStorage.setItem('uride_usuario', JSON.stringify(usuario));
 }
 
-// ── RF1: Registro con correo institucional ───────────────────
+export async function cerrarSesion() {
+    await supabase.auth.signOut();
+    localStorage.removeItem('uride_usuario');
+    window.location.href = 'index.html';
+}
+
+// ── RF1: Registro con correo institucional ────────────────────
+// Usa supabase.auth.signUp → Supabase envia correo de confirmacion real
 
 export async function registrarUsuario({ nombre, email, password, rol, telefono, carrera, zona, matricula }) {
     const emailNorm = email.trim().toLowerCase();
@@ -48,108 +42,112 @@ export async function registrarUsuario({ nombre, email, password, rol, telefono,
         throw new Error('Debes usar tu correo institucional (@uta.edu.ec).');
     }
 
-    // Verificar si ya existe
-    const { data: existe } = await supabase
-        .from('usuarios')
-        .select('id')
-        .eq('email', emailNorm)
-        .maybeSingle();
+    // Registrar en supabase.auth (envia correo de verificacion automaticamente)
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+        email:    emailNorm,
+        password: password,
+        options: {
+            emailRedirectTo: `${SITE_URL}/verificar-ok.html`,
+            data: {
+                nombre:    nombre.trim(),
+                rol:       rol || 'pasajero',
+                matricula: matricula || ''
+            }
+        }
+    });
 
-    if (existe) throw new Error('Ese correo ya esta registrado.');
+    if (authError) {
+        if (authError.message.includes('already registered')) {
+            throw new Error('Ese correo ya esta registrado.');
+        }
+        throw new Error('Error al registrar: ' + authError.message);
+    }
 
-    const codigo = generarCodigo6();
+    const authId = authData.user?.id;
+    if (!authId) throw new Error('Error al crear cuenta. Intenta de nuevo.');
 
+    // Guardar datos extra en nuestra tabla usuarios
     const { data, error } = await supabase
         .from('usuarios')
         .insert([{
-            nombre:             nombre.trim(),
-            email:              emailNorm,
-            password_hash:      crearPasswordHash(password),
-            rol:                rol || 'pasajero',
-            telefono:           telefono || null,
-            carrera:            carrera || null,
-            zona_referencia:    zona || null,
-            matricula:          matricula || null,
-            verificado:         false,
-            estado:             'pendiente_verificacion',
-            codigo_verificacion: codigo
+            id:              authId,
+            nombre:          nombre.trim(),
+            email:           emailNorm,
+            password_hash:   btoa(`${password}_uta_salt`),
+            rol:             rol || 'pasajero',
+            telefono:        telefono || null,
+            carrera:         carrera  || null,
+            zona_referencia: zona     || null,
+            matricula:       matricula || null,
+            verificado:      false,
+            estado:          'pendiente_verificacion'
         }])
         .select()
         .single();
 
-    if (error) throw new Error('Error al registrar: ' + error.message);
-
-    // Registrar evento
-    await registrarEvento(data.id, 'registro', 'Nuevo usuario registrado');
-
-    // En produccion aqui se enviaria el codigo por email.
-    // Para demo lo guardamos en sessionStorage para que la pagina de verificacion lo lea.
-    sessionStorage.setItem('uride_codigo_demo', codigo);
-    sessionStorage.setItem('uride_email_verificar', emailNorm);
-
-    return data;
-}
-
-// ── RF1: Verificacion de codigo ──────────────────────────────
-
-export async function verificarCodigo(email, codigoIngresado) {
-    const emailNorm = email.trim().toLowerCase();
-
-    const { data: usuario, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('email', emailNorm)
-        .maybeSingle();
-
-    if (error || !usuario) throw new Error('Usuario no encontrado.');
-
-    if (usuario.codigo_verificacion !== codigoIngresado.trim()) {
-        throw new Error('Codigo incorrecto. Revisa tu correo.');
+    if (error && error.code !== '23505') {
+        throw new Error('Error al guardar perfil: ' + error.message);
     }
 
-    const { data: actualizado, error: errUpd } = await supabase
-        .from('usuarios')
-        .update({ verificado: true, estado: 'activo', codigo_verificacion: null })
-        .eq('id', usuario.id)
-        .select()
-        .single();
+    await registrarEvento(authId, 'registro', 'Nuevo usuario registrado');
 
-    if (errUpd) throw new Error('Error al verificar: ' + errUpd.message);
+    // Guardar email para la pagina de verificacion
+    sessionStorage.setItem('uride_email_verificar', emailNorm);
 
-    guardarSesion(actualizado);
-    await registrarEvento(actualizado.id, 'verificacion', 'Correo verificado');
-    return actualizado;
+    return data || { email: emailNorm };
 }
 
-// ── RF1: Inicio de sesion ────────────────────────────────────
+// ── RF1: Inicio de sesion ─────────────────────────────────────
 
 export async function iniciarSesion(email, password) {
     const emailNorm = email.trim().toLowerCase();
 
-    const { data, error } = await supabase
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email:    emailNorm,
+        password: password
+    });
+
+    if (authError) {
+        if (authError.message.includes('Email not confirmed')) {
+            sessionStorage.setItem('uride_email_verificar', emailNorm);
+            throw new Error('PENDIENTE_VERIFICACION');
+        }
+        throw new Error('Correo o contraseña incorrectos.');
+    }
+
+    // Obtener datos del perfil desde nuestra tabla
+    const { data: perfil, error: perfilError } = await supabase
         .from('usuarios')
         .select('*')
-        .eq('email', emailNorm)
-        .eq('password_hash', crearPasswordHash(password))
+        .eq('id', authData.user.id)
         .maybeSingle();
 
-    if (error || !data) throw new Error('Correo o contrasena incorrectos.');
+    if (perfilError || !perfil) {
+        throw new Error('No se encontro el perfil. Contacta al administrador.');
+    }
 
-    if (data.estado === 'suspendido') {
+    if (perfil.estado === 'suspendido') {
+        await supabase.auth.signOut();
         throw new Error('Tu cuenta esta suspendida. Contacta al administrador.');
     }
 
-    if (data.estado === 'pendiente_verificacion') {
-        sessionStorage.setItem('uride_email_verificar', emailNorm);
-        throw new Error('PENDIENTE_VERIFICACION');
+    // Marcar como verificado si auth lo confirmo
+    if (authData.user.email_confirmed_at && !perfil.verificado) {
+        await supabase
+            .from('usuarios')
+            .update({ verificado: true, estado: 'activo' })
+            .eq('id', perfil.id);
+        perfil.verificado = true;
+        perfil.estado     = 'activo';
     }
 
-    guardarSesion(data);
-    await registrarEvento(data.id, 'login', 'Inicio de sesion');
-    return data;
+    guardarSesion(perfil);
+    await registrarEvento(perfil.id, 'login', 'Inicio de sesion');
+    return perfil;
 }
 
-// ── Recuperacion de contrasena ───────────────────────────────
+// ── Recuperacion de contrasena ────────────────────────────────
+// supabase.auth envia el correo de recuperacion automaticamente
 
 export async function solicitarRecuperacion(email) {
     const emailNorm = email.trim().toLowerCase();
@@ -158,54 +156,34 @@ export async function solicitarRecuperacion(email) {
         throw new Error('Ingresa tu correo institucional (@uta.edu.ec).');
     }
 
-    const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('id, nombre')
-        .eq('email', emailNorm)
-        .maybeSingle();
+    const { error } = await supabase.auth.resetPasswordForEmail(emailNorm, {
+        redirectTo: `${SITE_URL}/nueva-password.html`
+    });
 
-    if (!usuario) throw new Error('No existe una cuenta con ese correo.');
+    if (error) throw new Error('Error al enviar correo: ' + error.message);
 
-    const codigo = generarCodigo6();
-
-    await supabase
-        .from('usuarios')
-        .update({ codigo_verificacion: codigo })
-        .eq('id', usuario.id);
-
-    // Demo: guardar en sessionStorage
-    sessionStorage.setItem('uride_codigo_demo', codigo);
     sessionStorage.setItem('uride_email_recuperar', emailNorm);
-
-    return { mensaje: 'Codigo enviado a tu correo institucional.' };
+    return { mensaje: 'Correo de recuperacion enviado. Revisa tu bandeja.' };
 }
 
-export async function restablecerContrasena(email, codigo, nuevaPassword) {
-    const emailNorm = email.trim().toLowerCase();
+// ── Nueva contrasena (desde link del correo) ──────────────────
 
-    const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('email', emailNorm)
-        .maybeSingle();
+export async function actualizarPassword(nuevaPassword) {
+    const { error } = await supabase.auth.updateUser({ password: nuevaPassword });
+    if (error) throw new Error('Error al actualizar: ' + error.message);
 
-    if (!usuario) throw new Error('Usuario no encontrado.');
-    if (usuario.codigo_verificacion !== codigo.trim()) throw new Error('Codigo incorrecto.');
-
-    const { data: actualizado, error } = await supabase
-        .from('usuarios')
-        .update({ password_hash: crearPasswordHash(nuevaPassword), codigo_verificacion: null })
-        .eq('id', usuario.id)
-        .select()
-        .single();
-
-    if (error) throw new Error('Error al restablecer: ' + error.message);
-
-    await registrarEvento(actualizado.id, 'recuperacion_contrasena', 'Contrasena restablecida');
-    return actualizado;
+    // Actualizar hash en nuestra tabla tambien
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        await supabase
+            .from('usuarios')
+            .update({ password_hash: btoa(`${nuevaPassword}_uta_salt`) })
+            .eq('id', user.id);
+        await registrarEvento(user.id, 'recuperacion_contrasena', 'Contrasena actualizada');
+    }
 }
 
-// ── RF2: Edicion de perfil ───────────────────────────────────
+// ── RF2: Edicion de perfil ────────────────────────────────────
 
 export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona, foto_url }) {
     const { data, error } = await supabase
@@ -213,8 +191,8 @@ export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona,
         .update({
             nombre:          nombre?.trim() || undefined,
             telefono:        telefono || null,
-            carrera:         carrera || null,
-            zona_referencia: zona || null,
+            carrera:         carrera  || null,
+            zona_referencia: zona     || null,
             foto_url:        foto_url || null,
             updated_at:      new Date().toISOString()
         })
@@ -229,7 +207,7 @@ export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona,
     return data;
 }
 
-// ── RF3: Publicar viaje ──────────────────────────────────────
+// ── RF3: Publicar viaje ───────────────────────────────────────
 
 export async function publicarViaje({ conductorId, origen, destino, fecha, hora, cupos, precio, ruta, notas }) {
     const { data, error } = await supabase
@@ -243,8 +221,8 @@ export async function publicarViaje({ conductorId, origen, destino, fecha, hora,
             cupos_total:       parseInt(cupos),
             cupos_disponibles: parseInt(cupos),
             precio_persona:    parseFloat(precio) || 0,
-            ruta_opcional:     ruta || null,
-            notas:             notas || null,
+            ruta_opcional:     ruta   || null,
+            notas:             notas  || null,
             estado:            'disponible'
         }])
         .select()
@@ -252,11 +230,11 @@ export async function publicarViaje({ conductorId, origen, destino, fecha, hora,
 
     if (error) throw new Error('Error al publicar viaje: ' + error.message);
 
-    await registrarEvento(conductorId, 'publicacion_viaje', `Viaje publicado: ${origen} -> ${destino}`, data.id);
+    await registrarEvento(conductorId, 'publicacion_viaje', `Viaje: ${origen} -> ${destino}`, data.id);
     return data;
 }
 
-// ── RF4: Buscar viajes ───────────────────────────────────────
+// ── RF4: Buscar viajes ────────────────────────────────────────
 
 export async function buscarViajes({ origen, destino, fecha, cupos } = {}) {
     let query = supabase
@@ -264,10 +242,10 @@ export async function buscarViajes({ origen, destino, fecha, cupos } = {}) {
         .select(`*, conductor:usuarios!conductor_id(id, nombre, calificacion_prom, total_viajes, verificado)`)
         .eq('estado', 'disponible')
         .gt('cupos_disponibles', 0)
-        .order('fecha', { ascending: true })
+        .order('fecha',       { ascending: true })
         .order('hora_salida', { ascending: true });
 
-    if (origen)  query = query.ilike('origen', `%${origen}%`);
+    if (origen)  query = query.ilike('origen',  `%${origen}%`);
     if (destino) query = query.ilike('destino', `%${destino}%`);
     if (fecha)   query = query.eq('fecha', fecha);
     if (cupos)   query = query.gte('cupos_disponibles', parseInt(cupos));
@@ -277,7 +255,7 @@ export async function buscarViajes({ origen, destino, fecha, cupos } = {}) {
     return data || [];
 }
 
-// ── RF5: Enviar solicitud ────────────────────────────────────
+// ── RF5: Enviar solicitud ─────────────────────────────────────
 
 export async function enviarSolicitud(viajeId, pasajeroId, asientos = 1) {
     const { data: viaje } = await supabase
@@ -305,7 +283,7 @@ export async function enviarSolicitud(viajeId, pasajeroId, asientos = 1) {
     return data;
 }
 
-// ── RF6: Gestionar solicitudes (conductor) ───────────────────
+// ── RF6: Gestionar solicitudes ────────────────────────────────
 
 export async function responderSolicitud(solicitudId, accion, conductorId) {
     const { data: sol } = await supabase
@@ -328,7 +306,6 @@ export async function responderSolicitud(solicitudId, accion, conductorId) {
 
     if (error) throw new Error('Error al responder: ' + error.message);
 
-    // Actualizar cupos si se acepto
     if (accion === 'aceptar') {
         await supabase
             .from('viajes')
@@ -340,7 +317,7 @@ export async function responderSolicitud(solicitudId, accion, conductorId) {
     return data;
 }
 
-// ── RF8: Calificar ───────────────────────────────────────────
+// ── RF8: Calificar ────────────────────────────────────────────
 
 export async function calificar({ viajeId, calificadorId, calificadoId, puntuacion, comentario, tipo }) {
     const { data, error } = await supabase
@@ -354,7 +331,6 @@ export async function calificar({ viajeId, calificadorId, calificadoId, puntuaci
         throw new Error('Error al calificar: ' + error.message);
     }
 
-    // Recalcular promedio del calificado
     const { data: cals } = await supabase
         .from('calificaciones')
         .select('puntuacion')
@@ -368,11 +344,11 @@ export async function calificar({ viajeId, calificadorId, calificadoId, puntuaci
             .eq('id', calificadoId);
     }
 
-    await registrarEvento(calificadorId, 'calificacion', `Calificacion enviada: ${puntuacion} estrellas`, viajeId);
+    await registrarEvento(calificadorId, 'calificacion', `${puntuacion} estrellas`, viajeId);
     return data;
 }
 
-// ── RF10: Reportar usuario ───────────────────────────────────
+// ── RF10: Reportar usuario ────────────────────────────────────
 
 export async function reportarUsuario({ reporteroId, reportadoId, viajeId, motivo, descripcion }) {
     const { data, error } = await supabase
@@ -382,12 +358,11 @@ export async function reportarUsuario({ reporteroId, reportadoId, viajeId, motiv
         .single();
 
     if (error) throw new Error('Error al enviar reporte: ' + error.message);
-
     await registrarEvento(reporteroId, 'reporte_enviado', `Reporte: ${motivo}`, reportadoId);
     return data;
 }
 
-// ── Trazabilidad (RNF4) ──────────────────────────────────────
+// ── Trazabilidad RNF4 ─────────────────────────────────────────
 
 export async function registrarEvento(usuarioId, tipo, descripcion, referenciaId = null) {
     await supabase.from('eventos_log').insert([{
@@ -398,15 +373,14 @@ export async function registrarEvento(usuarioId, tipo, descripcion, referenciaId
     }]);
 }
 
-// ── Admin: obtener reportes ──────────────────────────────────
+// ── Admin ─────────────────────────────────────────────────────
 
 export async function obtenerReportes() {
     const { data, error } = await supabase
         .from('reportes')
         .select(`*, reportero:usuarios!reportero_id(nombre, email), reportado:usuarios!reportado_id(nombre, email)`)
         .order('created_at', { ascending: false });
-
-    if (error) throw new Error('Error al obtener reportes: ' + error.message);
+    if (error) throw new Error('Error: ' + error.message);
     return data || [];
 }
 
@@ -415,8 +389,7 @@ export async function obtenerUsuarios() {
         .from('usuarios')
         .select('id, nombre, email, rol, matricula, calificacion_prom, estado, verificado, created_at')
         .order('created_at', { ascending: false });
-
-    if (error) throw new Error('Error al obtener usuarios: ' + error.message);
+    if (error) throw new Error('Error: ' + error.message);
     return data || [];
 }
 
@@ -427,7 +400,6 @@ export async function suspenderUsuario(usuarioId, adminId) {
         .eq('id', usuarioId)
         .select()
         .single();
-
     if (error) throw new Error('Error al suspender: ' + error.message);
     await registrarEvento(adminId, 'suspension', 'Usuario suspendido', usuarioId);
     return data;
@@ -440,8 +412,7 @@ export async function resolverReporte(reporteId, accion, adminId) {
         .eq('id', reporteId)
         .select()
         .single();
-
-    if (error) throw new Error('Error al resolver reporte: ' + error.message);
+    if (error) throw new Error('Error: ' + error.message);
     await registrarEvento(adminId, 'reporte_resuelto', `Accion: ${accion}`, reporteId);
     return data;
 }
