@@ -9,17 +9,17 @@
 <body class="auth-page">
 
 <div class="auth-card" style="max-width:500px;">
-    <div class="auth-logo">🚗</div>
+    <div class="auth-logo">&#128663;</div>
     <h1>Registro de Usuario</h1>
-    <p class="subtitle">Crea tu cuenta en U-Ride · Solo correos @uta.edu.ec</p>
+    <p class="subtitle">Crea tu cuenta en U-Ride &middot; Solo correos @uta.edu.ec</p>
     <div class="badge-verificado" style="justify-content:center;margin-bottom:16px;">Pasajero / Conductor</div>
-    <p style="font-size:12px;color:var(--texto-gris);margin:-6px 0 16px;">Te registras como estudiante UTA. Luego puedes usar el modo pasajero o conductor desde tu perfil.</p>
+    <p style="font-size:12px;color:var(--texto-gris);margin:-6px 0 16px;">Puedes usar el modo pasajero o conductor desde tu perfil.</p>
     <input type="hidden" id="rolSeleccionado" value="pasajero">
 
     <form id="formRegistro">
         <div class="form-group">
             <label for="nombre">Nombre Completo *</label>
-            <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+            <input type="text" id="nombre" placeholder="Ej: Juan P&eacute;rez" required>
         </div>
 
         <div class="form-group">
@@ -29,11 +29,11 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label for="matricula">Matrícula estudiantil (opcional)</label>
+                <label for="matricula">Matr&iacute;cula estudiantil (opcional)</label>
                 <input type="text" id="matricula" placeholder="20210001">
             </div>
             <div class="form-group">
-                <label for="telefono">Teléfono (opcional)</label>
+                <label for="telefono">Tel&eacute;fono (opcional)</label>
                 <input type="tel" id="telefono" placeholder="+593 99 000 0000">
             </div>
         </div>
@@ -41,7 +41,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="carrera">Carrera (opcional)</label>
-                <input type="text" id="carrera" placeholder="Ej: Ingeniería en Sistemas">
+                <input type="text" id="carrera" placeholder="Ej: Ingenier&iacute;a en Sistemas">
             </div>
             <div class="form-group">
                 <label for="zona">Zona / Barrio (opcional)</label>
@@ -51,23 +51,23 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label for="placa">Placa del vehículo (opcional)</label>
+                <label for="placa">Placa del veh&iacute;culo (opcional)</label>
                 <input type="text" id="placa" placeholder="Ej: ABC-1234">
             </div>
             <div class="form-group">
-                <label for="modeloVehiculo">Marca y modelo (vehículo) opcional</label>
+                <label for="modeloVehiculo">Modelo del veh&iacute;culo (opcional)</label>
                 <input type="text" id="modeloVehiculo" placeholder="Ej: Chevrolet Sail">
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="password">Contraseña *</label>
-                <input type="password" id="password" placeholder="Mínimo 6 caracteres" required minlength="6">
+                <label for="password">Contrase&ntilde;a *</label>
+                <input type="password" id="password" placeholder="M&iacute;nimo 6 caracteres" required minlength="6">
             </div>
             <div class="form-group">
-                <label for="confirmar">Confirmar Contraseña *</label>
-                <input type="password" id="confirmar" placeholder="Repite la contraseña" required>
+                <label for="confirmar">Confirmar Contrase&ntilde;a *</label>
+                <input type="password" id="confirmar" placeholder="Repite la contrase&ntilde;a" required>
             </div>
         </div>
 
@@ -76,7 +76,7 @@
     </form>
 
     <hr class="divider">
-    <p class="auth-footer">¿Ya tienes cuenta? <a href="index.html">Inicia sesión</a></p>
+    <p class="auth-footer">&iquest;Ya tienes cuenta? <a href="index.html">Inicia sesi&oacute;n</a></p>
 </div>
 
 <script type="module">
@@ -98,7 +98,7 @@
         const confirmar = document.getElementById('confirmar').value;
 
         if (password !== confirmar) {
-            mostrar('Las contraseñas no coinciden.', 'error');
+            mostrar('Las contrase\u00f1as no coinciden.', 'error');
             return;
         }
 
@@ -120,7 +120,7 @@
                 modeloVehiculo: document.getElementById('modeloVehiculo').value
             });
 
-            mostrar('✓ Cuenta creada. Revisa tu correo @uta.edu.ec — te enviamos un link de verificación.', 'success');
+            mostrar('\u2713 Cuenta creada. Revisa tu correo @uta.edu.ec; te enviamos un link de verificaci\u00f3n.', 'success');
 
             // Limpiar formulario
             form.reset();

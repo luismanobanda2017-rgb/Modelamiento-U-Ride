@@ -13,23 +13,23 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
-            <h2>🚗 U-Ride</h2>
+            <h2>&#128663; U-Ride</h2>
             <p>Viajes Seguros UTA</p>
         </div>
         <nav class="sidebar-nav">
-            <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
-            <a href="perfil.html" class="activo"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="dashboard.html"><span class="icon">&#127968;</span> Inicio</a>
+            <a href="perfil.html" class="activo"><span class="icon">&#128100;</span> Mi Perfil</a>
             <div id="navConductor" style="display:none;">
-                <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
-                <a href="mis-viajes.html"><span class="icon">🚘</span> Mis Viajes</a>
-                <a href="solicitudes.html"><span class="icon">✉️</span> Solicitudes</a>
+                <a href="publicar-viaje.html"><span class="icon">&#10133;</span> Publicar Viaje</a>
+                <a href="mis-viajes.html"><span class="icon">&#127757;</span> Mis Viajes</a>
+                <a href="solicitudes.html"><span class="icon">&#128203;</span> Solicitudes</a>
             </div>
             <div id="navPasajero">
-                <a href="buscar-viajes.html"><span class="icon">🔎</span> Buscar Viajes</a>
-                <a href="mis-solicitudes.html"><span class="icon">📝</span> Mis Solicitudes</a>
+                <a href="buscar-viajes.html"><span class="icon">&#128269;</span> Buscar Viajes</a>
+                <a href="mis-solicitudes.html"><span class="icon">&#128221;</span> Mis Solicitudes</a>
             </div>
             <div id="navAdmin" style="display:none;">
-                <a href="admin.html"><span class="icon">🛠️</span> Panel Admin</a>
+                <a href="admin.html"><span class="icon">&#128736;&#65039;</span> Panel Admin</a>
             </div>
         </nav>
         <div class="sidebar-footer">
@@ -64,10 +64,10 @@
                 </p>
                 <hr class="divider">
                 <div style="text-align:left; font-size:13px; color:var(--texto-gris);">
-                    <p style="margin-bottom:6px;">📧 <span id="perfilEmail">&mdash;</span></p>
-                    <p style="margin-bottom:6px;">📞 <span id="perfilTelefono">&mdash;</span></p>
-                    <p style="margin-bottom:6px;">🎓 <span id="perfilCarrera">&mdash;</span></p>
-                    <p style="margin-bottom:6px;">📍 <span id="perfilZona">&mdash;</span></p>
+                    <p style="margin-bottom:6px;">&#128231; <span id="perfilEmail">&mdash;</span></p>
+                    <p style="margin-bottom:6px;">&#128222; <span id="perfilTelefono">&mdash;</span></p>
+                    <p style="margin-bottom:6px;">&#127891; <span id="perfilCarrera">&mdash;</span></p>
+                    <p style="margin-bottom:6px;">&#128205; <span id="perfilZona">&mdash;</span></p>
                     <p style="margin-bottom:6px;">Matr&iacute;cula: <span id="perfilMatricula">&mdash;</span></p>
                     <p style="margin-bottom:6px;">Placa: <span id="perfilPlaca">No registrada</span></p>
                     <p>Veh&iacute;culo: <span id="perfilVehiculo">No registrado</span></p>
@@ -88,7 +88,7 @@
                             <option value="pasajero">Pasajero</option>
                             <option value="conductor">Conductor</option>
                         </select>
-                        <small style="color:var(--texto-gris);font-size:11px;">Para activar Conductor debes completar la placa del veh&iacute;culo.</small>
+                        <small style="color:var(--texto-gris);font-size:11px;">Para activar Conductor debes completar la placa y modelo del veh&iacute;culo.</small>
                     </div>
 
                     <div class="form-group">
@@ -119,7 +119,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="editModeloVehiculo">Marca y modelo</label>
+                        <label for="editModeloVehiculo">Modelo del veh&iacute;culo</label>
                         <input type="text" id="editModeloVehiculo" placeholder="Ej: Chevrolet Sail">
                     </div>
 
@@ -185,20 +185,26 @@
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
 
+    function setVehicleFieldsVisible(show) {
+        document.getElementById('editPlaca').closest('.form-group').style.display = show ? 'block' : 'none';
+        document.getElementById('editModeloVehiculo').closest('.form-group').style.display = show ? 'block' : 'none';
+    }
+
     function setRequiredForConductor(isConductor) {
+        setVehicleFieldsVisible(isConductor);
         if (isConductor) {
             placaInput.setAttribute('required', '');
             document.getElementById('editModeloVehiculo').setAttribute('required', '');
             document.getElementById('editNombre').setAttribute('required', '');
             placaLabel.innerHTML = 'Placa del veh\u00edculo <span style="color:var(--rojo-error);">*</span>';
-            modeloLabel.innerHTML = 'Marca y modelo <span style="color:var(--rojo-error);">*</span>';
+            modeloLabel.innerHTML = 'Modelo del veh\u00edculo <span style="color:var(--rojo-error);">*</span>';
             nombreLabel.innerHTML = 'Nombre Completo <span style="color:var(--rojo-error);">*</span>';
         } else {
             placaInput.removeAttribute('required');
             document.getElementById('editModeloVehiculo').removeAttribute('required');
             document.getElementById('editNombre').removeAttribute('required');
             placaLabel.innerHTML = 'Placa del veh\u00edculo';
-            modeloLabel.innerHTML = 'Marca y modelo';
+            modeloLabel.innerHTML = 'Modelo del veh\u00edculo';
             nombreLabel.innerHTML = 'Nombre Completo';
         }
     }
@@ -256,11 +262,12 @@
 
         if (u.verificado) document.getElementById('perfilVerificado').style.display = 'flex';
 
+        const modoGuardado = u.modo_actual || 'pasajero';
+        const mostrarVehiculo = !esAdmin && modoGuardado === 'conductor';
         document.getElementById('modoActual').closest('.form-group').style.display = esAdmin ? 'none' : 'block';
-        document.getElementById('editPlaca').closest('.form-group').style.display = esAdmin ? 'none' : 'block';
-        document.getElementById('editModeloVehiculo').closest('.form-group').style.display = esAdmin ? 'none' : 'block';
-        document.getElementById('perfilPlaca').closest('p').style.display = esAdmin ? 'none' : 'block';
-        document.getElementById('perfilVehiculo').closest('p').style.display = esAdmin ? 'none' : 'block';
+        setVehicleFieldsVisible(mostrarVehiculo);
+        document.getElementById('perfilPlaca').closest('p').style.display = mostrarVehiculo ? 'block' : 'none';
+        document.getElementById('perfilVehiculo').closest('p').style.display = mostrarVehiculo ? 'block' : 'none';
         document.getElementById('tituloCalificaciones').closest('.card').style.display = esAdmin ? 'none' : 'block';
         document.getElementById('perfilEstrellas').style.display = esAdmin ? 'none' : 'block';
         document.getElementById('perfilCalif').closest('p').style.display = esAdmin ? 'none' : 'block';
@@ -278,8 +285,8 @@
         document.getElementById('navPasajero').style.display = u.rol !== 'admin' && u.modo_actual !== 'conductor' ? 'block' : 'none';
         document.getElementById('navAdmin').style.display = esAdmin ? 'block' : 'none';
         setSidebarMode(u.modo_actual || 'pasajero');
-        // Ajustar asteriscos y required seg&uacute;n modo
-        setRequiredForConductor(!esAdmin && u.modo_actual === 'conductor');
+        // Ajustar asteriscos y required segun modo
+        setRequiredForConductor(mostrarVehiculo);
     }
 
     renderPerfil(usuario);
@@ -349,8 +356,9 @@
         const isConductor = modoSelect.value === 'conductor';
         setRequiredForConductor(isConductor);
 
-        if (isConductor && !placaInput.value.trim()) {
-            mostrar('Para activar Conductor debes completar la placa del veh\u00edculo.', 'error');
+        const modeloInput = document.getElementById('editModeloVehiculo');
+        if (isConductor && (!placaInput.value.trim() || !modeloInput.value.trim())) {
+            mostrar('Para activar Conductor debes completar la placa y modelo del veh\u00edculo.', 'error');
         } else {
             msg.className = 'msg';
         }
@@ -395,12 +403,12 @@
         }
         const placaValor = document.getElementById('editPlaca').value.trim();
         if (modoActual === 'conductor' && !placaValor) {
-            mostrar('Para activar Conductor debes completar la placa del veh\u00edculo.', 'error');
+            mostrar('Para activar Conductor debes completar la placa y modelo del veh\u00edculo.', 'error');
             return;
         }
         const modeloValor = document.getElementById('editModeloVehiculo').value.trim();
         if (modoActual === 'conductor' && !modeloValor) {
-            mostrar('Para activar Conductor debes completar la marca y modelo del veh\u00edculo.', 'error');
+            mostrar('Para activar Conductor debes completar el modelo del veh\u00edculo.', 'error');
             return;
         }
 
