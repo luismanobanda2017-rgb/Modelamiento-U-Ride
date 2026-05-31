@@ -35,7 +35,7 @@ export async function cerrarSesion() {
 // ── RF1: Registro con correo institucional ────────────────────
 // Usa supabase.auth.signUp → Supabase envia correo de confirmacion real
 
-export async function registrarUsuario({ nombre, email, password, rol, telefono, carrera, zona, matricula }) {
+export async function registrarUsuario({ nombre, email, password, rol, telefono, carrera, zona, matricula, placa, modeloVehiculo }) {
     const emailNorm = email.trim().toLowerCase();
 
     if (!emailNorm.endsWith('@uta.edu.ec')) {
@@ -79,6 +79,9 @@ export async function registrarUsuario({ nombre, email, password, rol, telefono,
             carrera:         carrera  || null,
             zona_referencia: zona     || null,
             matricula:       matricula || null,
+            placa_vehiculo:  placa?.trim() || null,
+            modelo_vehiculo: modeloVehiculo?.trim() || null,
+            modo_actual:     placa?.trim() ? 'conductor' : 'pasajero',
             verificado:      false,
             estado:          'pendiente_verificacion'
         }])
@@ -185,7 +188,11 @@ export async function actualizarPassword(nuevaPassword) {
 
 // ── RF2: Edicion de perfil ────────────────────────────────────
 
-export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona, foto_url }) {
+export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona, foto_url, placa, modeloVehiculo, modoActual }) {
+    if (modoActual === 'conductor' && !placa?.trim()) {
+        throw new Error('Para activar el rol Conductor debes completar tu placa en el perfil.');
+    }
+
     const { data, error } = await supabase
         .from('usuarios')
         .update({
@@ -194,6 +201,9 @@ export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona,
             carrera:         carrera  || null,
             zona_referencia: zona     || null,
             foto_url:        foto_url || null,
+            placa_vehiculo:  placa?.trim() || null,
+            modelo_vehiculo: modeloVehiculo?.trim() || null,
+            modo_actual:     modoActual || 'pasajero',
             updated_at:      new Date().toISOString()
         })
         .eq('id', usuarioId)
@@ -426,7 +436,7 @@ export async function obtenerReportes() {
 export async function obtenerUsuarios() {
     const { data, error } = await supabase
         .from('usuarios')
-        .select('id, nombre, email, rol, matricula, calificacion_prom, estado, verificado, created_at')
+        .select('id, nombre, email, rol, matricula, placa_vehiculo, modelo_vehiculo, modo_actual, calificacion_prom, estado, verificado, created_at')
         .order('created_at', { ascending: false });
     if (error) throw new Error('Error: ' + error.message);
     return data || [];

@@ -322,10 +322,10 @@ body.auth-page {
     background: transparent;
     border-color: transparent;
     color: #fff;
-    width: 100%;
-    font-size: 15px;
+    width: auto;
+    font-size: 13px;
     font-weight: 800;
-    padding: 11px 16px;
+    padding: 8px 12px;
     box-shadow: none;
 }
 

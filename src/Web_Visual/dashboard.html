@@ -123,11 +123,11 @@
 
     // Sidebar info
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
-    document.getElementById('sidebarRol').textContent    = usuario.rol === 'admin' ? 'Administrador' : 'Estudiante';
+    document.getElementById('sidebarRol').textContent    = usuario.rol === 'admin' ? 'Administrador' : (usuario.modo_actual === 'conductor' ? 'Conductor' : 'Pasajero');
     document.getElementById('saludo').textContent        = `Bienvenido/a, ${usuario.nombre.split(' ')[0]} 👋`;
     document.getElementById('subtitleDash').textContent  = usuario.rol === 'admin'
         ? 'Panel de administración · U-Ride UTA'
-        : 'Modo pasajero y conductor · U-Ride UTA';
+        : `Modo ${usuario.modo_actual === 'conductor' ? 'conductor' : 'pasajero'} · U-Ride UTA`;
 
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
 
@@ -139,9 +139,11 @@
         document.getElementById('marketplaceNote').style.display = 'none';
         cargarStatsAdmin();
     } else {
-        document.getElementById('navConductor').style.display = 'block';
-        document.getElementById('seccionConductor').style.display = 'block';
-        cargarViajesConductor();
+        if (usuario.modo_actual === 'conductor') {
+            document.getElementById('navConductor').style.display = 'block';
+            document.getElementById('seccionConductor').style.display = 'block';
+            cargarViajesConductor();
+        }
         cargarViajesDisponibles();
     }
 

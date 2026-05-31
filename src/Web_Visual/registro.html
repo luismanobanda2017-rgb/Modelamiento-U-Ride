@@ -9,22 +9,17 @@
 <body class="auth-page">
 
 <div class="auth-card" style="max-width:500px;">
-    <div class="auth-logo">🚗</div>
+    <div class="auth-logo">ðŸš—</div>
     <h1>Registro de Usuario</h1>
-    <p class="subtitle">Crea tu cuenta en U-Ride · Solo correos @uta.edu.ec</p>
-
-    <!-- Selector de modo inicial -->
-    <div class="tipo-usuario" id="tipoUsuario">
-        <div class="tipo-btn activo" data-rol="pasajero">🧑 Pasajero</div>
-        <div class="tipo-btn"       data-rol="conductor">🚗 Conductor</div>
-    </div>
-    <p style="font-size:12px;color:var(--texto-gris);margin:-6px 0 16px;">Es solo tu modo inicial. Después podrás publicar viajes y también solicitar cupos.</p>
+    <p class="subtitle">Crea tu cuenta en U-Ride Â· Solo correos @uta.edu.ec</p>
+    <div class="badge-verificado" style="justify-content:center;margin-bottom:16px;">Pasajero / Conductor</div>
+    <p style="font-size:12px;color:var(--texto-gris);margin:-6px 0 16px;">Te registras como estudiante UTA. Luego puedes usar el modo pasajero o conductor desde tu perfil.</p>
     <input type="hidden" id="rolSeleccionado" value="pasajero">
 
     <form id="formRegistro">
         <div class="form-group">
             <label for="nombre">Nombre Completo *</label>
-            <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+            <input type="text" id="nombre" placeholder="Ej: Juan PÃ©rez" required>
         </div>
 
         <div class="form-group">
@@ -34,11 +29,11 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label for="matricula">Matrícula *</label>
-                <input type="text" id="matricula" placeholder="20210001" required>
+                <label for="matricula">Matrícula estudiantil (opcional)</label>
+                <input type="text" id="matricula" placeholder="20210001">
             </div>
             <div class="form-group">
-                <label for="telefono">Teléfono (opcional)</label>
+                <label for="telefono">TelÃ©fono (opcional)</label>
                 <input type="tel" id="telefono" placeholder="+593 99 000 0000">
             </div>
         </div>
@@ -46,7 +41,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="carrera">Carrera (opcional)</label>
-                <input type="text" id="carrera" placeholder="Ej: Ingeniería en Sistemas">
+                <input type="text" id="carrera" placeholder="Ej: IngenierÃ­a en Sistemas">
             </div>
             <div class="form-group">
                 <label for="zona">Zona / Barrio (opcional)</label>
@@ -56,12 +51,23 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label for="password">Contraseña *</label>
-                <input type="password" id="password" placeholder="Mínimo 6 caracteres" required minlength="6">
+                <label for="placa">Placa del vehículo (opcional)</label>
+                <input type="text" id="placa" placeholder="Ej: ABC-1234">
             </div>
             <div class="form-group">
-                <label for="confirmar">Confirmar Contraseña *</label>
-                <input type="password" id="confirmar" placeholder="Repite la contraseña" required>
+                <label for="modeloVehiculo">Marca y modelo (vehículo) opcional</label>
+                <input type="text" id="modeloVehiculo" placeholder="Ej: Chevrolet Sail">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="password">ContraseÃ±a *</label>
+                <input type="password" id="password" placeholder="MÃ­nimo 6 caracteres" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="confirmar">Confirmar ContraseÃ±a *</label>
+                <input type="password" id="confirmar" placeholder="Repite la contraseÃ±a" required>
             </div>
         </div>
 
@@ -70,24 +76,12 @@
     </form>
 
     <hr class="divider">
-    <p class="auth-footer">¿Ya tienes cuenta? <a href="index.html">Inicia sesión</a></p>
+    <p class="auth-footer">Â¿Ya tienes cuenta? <a href="index.html">Inicia sesiÃ³n</a></p>
 </div>
 
 <script type="module">
     import { registrarUsuario } from '../Persistence/supabaseClient.js';
-
-    // Selector tipo usuario
-    const tipoBtns = document.querySelectorAll('.tipo-btn');
     const rolInput = document.getElementById('rolSeleccionado');
-
-    tipoBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tipoBtns.forEach(b => b.classList.remove('activo'));
-            btn.classList.add('activo');
-            rolInput.value = btn.dataset.rol;
-        });
-    });
-
     const form = document.getElementById('formRegistro');
     const btn  = document.getElementById('btnRegistrar');
     const msg  = document.getElementById('msgRegistro');
@@ -104,7 +98,7 @@
         const confirmar = document.getElementById('confirmar').value;
 
         if (password !== confirmar) {
-            mostrar('Las contraseñas no coinciden.', 'error');
+            mostrar('Las contraseÃ±as no coinciden.', 'error');
             return;
         }
 
@@ -121,15 +115,15 @@
                 telefono:  document.getElementById('telefono').value,
                 carrera:   document.getElementById('carrera').value,
                 zona:      document.getElementById('zona').value,
-                matricula: document.getElementById('matricula').value
+                matricula: document.getElementById('matricula').value,
+                placa:     document.getElementById('placa').value,
+                modeloVehiculo: document.getElementById('modeloVehiculo').value
             });
 
-            mostrar('✅ Cuenta creada. Revisa tu correo @uta.edu.ec — te enviamos un link de verificación.', 'success');
+            mostrar('âœ… Cuenta creada. Revisa tu correo @uta.edu.ec â€” te enviamos un link de verificaciÃ³n.', 'success');
 
             // Limpiar formulario
             form.reset();
-            document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('activo'));
-            document.querySelector('[data-rol="pasajero"]').classList.add('activo');
             rolInput.value = 'pasajero';
         } catch (err) {
             mostrar(err.message, 'error');
