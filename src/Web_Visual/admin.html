@@ -54,13 +54,14 @@
                                 <th>Reportero</th>
                                 <th>Reportado</th>
                                 <th>Motivo</th>
+                                <th>Evidencia</th>
                                 <th>Fecha</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="bodyReportes">
-                            <tr><td colspan="6" style="text-align:center;color:var(--texto-gris);">Cargando...</td></tr>
+                            <tr><td colspan="7" style="text-align:center;color:var(--texto-gris);">Cargando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -191,7 +192,7 @@
         const tbody = document.getElementById('bodyReportes');
 
         if (reportes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--texto-gris);padding:20px;">No hay reportes.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--texto-gris);padding:20px;">No hay reportes.</td></tr>';
             return;
         }
 
@@ -199,7 +200,13 @@
             <tr>
                 <td>${r.reportero?.nombre || '—'}</td>
                 <td><strong>${r.reportado?.nombre || '—'}</strong></td>
-                <td style="max-width:200px;font-size:13px;">${r.motivo}</td>
+                <td style="max-width:220px;font-size:13px;">
+                    <strong>${r.motivo}</strong>
+                    ${r.descripcion ? `<br><span style="color:var(--texto-gris);">${r.descripcion}</span>` : ''}
+                </td>
+                <td style="font-size:12px;">
+                    ${r.evidencia_url ? `<a href="${r.evidencia_url}" target="_blank" rel="noopener">Ver evidencia</a>` : '—'}
+                </td>
                 <td style="font-size:12px;">${new Date(r.created_at).toLocaleDateString('es-EC')}</td>
                 <td><span class="badge badge-${r.estado === 'pendiente' ? 'pendiente' : r.estado === 'resuelto' ? 'activo' : 'verificado'}">${r.estado}</span></td>
                 <td>

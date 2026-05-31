@@ -14,6 +14,7 @@ ALTER TABLE eventos_log ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS usuarios_select ON usuarios;
 DROP POLICY IF EXISTS usuarios_insert ON usuarios;
 DROP POLICY IF EXISTS usuarios_update ON usuarios;
+DROP POLICY IF EXISTS usuarios_delete ON usuarios;
 DROP POLICY IF EXISTS viajes_select ON viajes;
 DROP POLICY IF EXISTS viajes_insert ON viajes;
 DROP POLICY IF EXISTS viajes_update ON viajes;
@@ -31,6 +32,9 @@ CREATE POLICY usuarios_insert ON usuarios
 
 CREATE POLICY usuarios_update ON usuarios
     FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY usuarios_delete ON usuarios
+    FOR DELETE USING (true);
 
 -- Viajes: lectura publica, escritura libre (RLS simple para frontend)
 CREATE POLICY viajes_select ON viajes

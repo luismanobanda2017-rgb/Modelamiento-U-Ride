@@ -318,6 +318,18 @@ body.auth-page {
 .sidebar-footer .user-info { font-size: 13px; opacity: 0.85; margin-bottom: 10px; }
 .sidebar-footer .user-info strong { display: block; font-size: 14px; opacity: 1; }
 
+.sidebar-footer .btn-secondary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--azul-primary);
+}
+
+.sidebar-footer .btn-secondary:hover:not(:disabled) {
+    background: #E8EAF6;
+    border-color: #E8EAF6;
+    color: var(--azul-primary);
+}
+
 /* ── Main content ── */
 .main-content {
     flex: 1;

@@ -350,10 +350,17 @@ export async function calificar({ viajeId, calificadorId, calificadoId, puntuaci
 
 // ── RF10: Reportar usuario ────────────────────────────────────
 
-export async function reportarUsuario({ reporteroId, reportadoId, viajeId, motivo, descripcion }) {
+export async function reportarUsuario({ reporteroId, reportadoId, viajeId, motivo, descripcion, evidenciaUrl }) {
     const { data, error } = await supabase
         .from('reportes')
-        .insert([{ reportero_id: reporteroId, reportado_id: reportadoId, viaje_id: viajeId || null, motivo, descripcion }])
+        .insert([{
+            reportero_id:  reporteroId,
+            reportado_id:  reportadoId,
+            viaje_id:      viajeId || null,
+            motivo,
+            descripcion,
+            evidencia_url: evidenciaUrl || null
+        }])
         .select()
         .single();
 

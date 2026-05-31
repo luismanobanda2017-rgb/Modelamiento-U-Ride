@@ -36,6 +36,39 @@
     </main>
 </div>
 
+<!-- Modal reportar pasajero -->
+<div class="modal-overlay hidden" id="modalReportar">
+    <div class="modal">
+        <button class="modal-close" id="btnCerrarReporte">✕</button>
+        <h2>Reportar Pasajero</h2>
+        <p id="nombreReportado">—</p>
+        <div class="form-group">
+            <label for="reporteMotivo">Motivo *</label>
+            <select id="reporteMotivo" required>
+                <option value="">Selecciona un motivo</option>
+                <option value="conducta_indebida">Conducta indebida</option>
+                <option value="incumplimiento_reglas">Incumplimiento de reglas</option>
+                <option value="inasistencia">No se presentó al viaje</option>
+                <option value="seguridad">Situación de seguridad</option>
+                <option value="otro">Otro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="reporteDescripcion">Descripción *</label>
+            <textarea id="reporteDescripcion" rows="4" placeholder="Describe lo ocurrido..." required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="reporteEvidencia">Evidencia opcional</label>
+            <input type="url" id="reporteEvidencia" placeholder="Link a imagen, documento o captura">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="btnCancelarReporte">Cancelar</button>
+            <button class="btn btn-danger" id="btnEnviarReporte">Enviar Reporte</button>
+        </div>
+        <div id="msgReporte" class="msg"></div>
+    </div>
+</div>
+
 <!-- Modal calificar -->
 <div class="modal-overlay hidden" id="modalCalificar">
     <div class="modal">
@@ -68,7 +101,7 @@
 <script type="module">
     import {
         obtenerUsuarioActual, cerrarSesion,
-        responderSolicitud, calificar, supabase
+        responderSolicitud, calificar, reportarUsuario, supabase
     } from '../Persistence/supabaseClient.js';
 
     const usuario = obtenerUsuarioActual();
@@ -79,6 +112,7 @@
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
 
     let califData = null;
+    let reporteData = null;
 
     async function cargar() {
         const { data: viajes } = await supabase
@@ -158,6 +192,9 @@
                                         ⭐ Calificar
                                     </button>
                                 ` : ''}
+                                <button class="btn btn-danger btn-sm" onclick="abrirReportar('${s.pasajero?.id}', '${s.pasajero?.nombre}', '${v.id}')">
+                                    Reportar
+                                </button>
                             </div>
                         </div>
                     `;
@@ -182,6 +219,60 @@
             alert(err.message);
         }
     };
+
+    // Reportes
+    window.abrirReportar = function(pasajeroId, nombre, viajeId) {
+        reporteData = { reportadoId: pasajeroId, viajeId };
+        document.getElementById('nombreReportado').textContent = `Reporte sobre ${nombre}`;
+        document.getElementById('reporteMotivo').value = '';
+        document.getElementById('reporteDescripcion').value = '';
+        document.getElementById('reporteEvidencia').value = '';
+        document.getElementById('msgReporte').className = 'msg';
+        document.getElementById('btnEnviarReporte').disabled = false;
+        document.getElementById('btnEnviarReporte').textContent = 'Enviar Reporte';
+        document.getElementById('modalReportar').classList.remove('hidden');
+    };
+
+    document.getElementById('btnCerrarReporte').addEventListener('click', () =>
+        document.getElementById('modalReportar').classList.add('hidden'));
+    document.getElementById('btnCancelarReporte').addEventListener('click', () =>
+        document.getElementById('modalReportar').classList.add('hidden'));
+
+    document.getElementById('btnEnviarReporte').addEventListener('click', async () => {
+        const motivo = document.getElementById('reporteMotivo').value;
+        const descripcion = document.getElementById('reporteDescripcion').value.trim();
+        const evidenciaUrl = document.getElementById('reporteEvidencia').value.trim();
+        const btn = document.getElementById('btnEnviarReporte');
+        const msg = document.getElementById('msgReporte');
+
+        if (!motivo || !descripcion) {
+            msg.textContent = 'Completa el motivo y la descripción.';
+            msg.className = 'msg show msg-error';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+
+        try {
+            await reportarUsuario({
+                reporteroId: usuario.id,
+                reportadoId: reporteData.reportadoId,
+                viajeId: reporteData.viajeId,
+                motivo,
+                descripcion,
+                evidenciaUrl
+            });
+            msg.textContent = 'Reporte enviado para revisión.';
+            msg.className = 'msg show msg-success';
+            setTimeout(() => document.getElementById('modalReportar').classList.add('hidden'), 1500);
+        } catch (err) {
+            msg.textContent = err.message;
+            msg.className = 'msg show msg-error';
+            btn.disabled = false;
+            btn.textContent = 'Enviar Reporte';
+        }
+    });
 
     // Calificación
     window.abrirCalificar = function(pasajeroId, nombre, viajeId) {
