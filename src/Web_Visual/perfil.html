@@ -383,6 +383,13 @@
             }
 
             renderPerfil(actualizado);
+            usuario.modo_actual = actualizado.modo_actual;
+            usuario.placa_vehiculo = actualizado.placa_vehiculo;
+            usuario.modelo_vehiculo = actualizado.modelo_vehiculo;
+            usuario.nombre = actualizado.nombre;
+            usuario.telefono = actualizado.telefono;
+            usuario.carrera = actualizado.carrera;
+            usuario.zona_referencia = actualizado.zona_referencia;
             localStorage.setItem('uride_usuario', JSON.stringify(actualizado));
             mostrar('✓ Perfil actualizado correctamente.', 'success');
 

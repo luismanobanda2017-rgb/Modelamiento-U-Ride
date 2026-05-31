@@ -136,12 +136,17 @@
         document.getElementById('navAdmin').style.display    = 'block';
         document.getElementById('seccionAdmin').style.display = 'block';
         document.getElementById('seccionPasajero').style.display = 'none';
+        document.getElementById('navConductor').style.display = 'none';
         document.getElementById('marketplaceNote').style.display = 'none';
         cargarStatsAdmin();
     } else {
-        if (usuario.modo_actual === 'conductor') {
-            document.getElementById('navConductor').style.display = 'block';
-            document.getElementById('seccionConductor').style.display = 'block';
+        const isConductor = usuario.modo_actual === 'conductor';
+        document.getElementById('navConductor').style.display = isConductor ? 'block' : 'none';
+        document.getElementById('navPasajero').style.display = isConductor ? 'none' : 'block';
+        document.getElementById('seccionConductor').style.display = isConductor ? 'block' : 'none';
+        document.getElementById('seccionPasajero').style.display = isConductor ? 'none' : 'block';
+
+        if (isConductor) {
             cargarViajesConductor();
         }
         cargarViajesDisponibles();
