@@ -86,13 +86,16 @@ export async function registrarUsuario({ nombre, email, password, rol, telefono,
         estado:          'pendiente_verificacion'
     };
 
-    let res = await supabase.from('usuarios').insert([insertPayload]).select().single();
+    // Selección explícita de columnas conocidas para evitar errores si la columna
+    // `modelo_vehiculo` no está presente en el esquema (workaround temporal).
+    const safeSelectCols = `id,nombre,email,rol,matricula,placa_vehiculo,modo_actual,calificacion_prom,total_viajes,estado,verificado,created_at,password_hash,telefono,carrera,zona_referencia,foto_url,updated_at`;
+    let res = await supabase.from('usuarios').insert([insertPayload]).select(safeSelectCols).single();
     if (res.error) {
         const msg = String(res.error.message || '').toLowerCase();
         if (msg.includes('modelo_vehiculo') || msg.includes("column \"modelo_vehiculo\"")) {
             // reintentar sin modelo_vehiculo
             delete insertPayload.modelo_vehiculo;
-            res = await supabase.from('usuarios').insert([insertPayload]).select().single();
+            res = await supabase.from('usuarios').insert([insertPayload]).select(safeSelectCols).single();
         }
     }
 
@@ -214,13 +217,13 @@ export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona,
         updated_at:      new Date().toISOString()
     };
 
-    let upd = await supabase.from('usuarios').update(updatePayload).eq('id', usuarioId).select().single();
+    let upd = await supabase.from('usuarios').update(updatePayload).eq('id', usuarioId).select(safeSelectCols).single();
     if (upd.error) {
         const msg = String(upd.error.message || '').toLowerCase();
         if (msg.includes('modelo_vehiculo') || msg.includes("column \"modelo_vehiculo\"")) {
             // reintentar sin la columna modelo_vehiculo
             delete updatePayload.modelo_vehiculo;
-            upd = await supabase.from('usuarios').update(updatePayload).eq('id', usuarioId).select().single();
+            upd = await supabase.from('usuarios').update(updatePayload).eq('id', usuarioId).select(safeSelectCols).single();
         }
     }
 
@@ -417,7 +420,13 @@ export async function subirEvidenciaReporte(archivo, usuarioId) {
             upsert: false
         });
 
-    if (error) throw new Error('Error al subir evidencia: ' + error.message);
+    if (error) {
+        const msg = String(error.message || '').toLowerCase();
+        if (msg.includes('bucket') && msg.includes('not found')) {
+            throw new Error("Error al subir evidencia: el bucket 'evidencias-reportes' no existe en Supabase Storage. Crea un bucket con ese nombre en Storage → Buckets y dale permisos públicos, o ajusta el nombre del bucket en src/Persistence/supabaseClient.js");
+        }
+        throw new Error('Error al subir evidencia: ' + error.message);
+    }
 
     const { data } = supabase.storage
         .from('evidencias-reportes')
