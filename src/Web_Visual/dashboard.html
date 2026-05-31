@@ -137,6 +137,7 @@
         document.getElementById('seccionAdmin').style.display = 'block';
         document.getElementById('seccionPasajero').style.display = 'none';
         document.getElementById('navConductor').style.display = 'none';
+        document.getElementById('navPasajero').style.display = 'none';
         document.getElementById('marketplaceNote').style.display = 'none';
         cargarStatsAdmin();
     } else {
@@ -148,8 +149,9 @@
 
         if (isConductor) {
             cargarViajesConductor();
+        } else {
+            cargarViajesDisponibles();
         }
-        cargarViajesDisponibles();
     }
 
     // Stats comunes

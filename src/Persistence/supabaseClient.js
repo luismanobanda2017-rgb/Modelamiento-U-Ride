@@ -15,6 +15,10 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // URL base para redirecciones de auth (GitHub Pages)
 const SITE_URL = 'https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/src/Web_Visual';
 
+// Selección explícita de columnas conocidas para evitar errores si la columna
+// `modelo_vehiculo` no está presente en el esquema (workaround temporal).
+const safeSelectCols = `id,nombre,email,rol,matricula,placa_vehiculo,modo_actual,calificacion_prom,total_viajes,estado,verificado,created_at,password_hash,telefono,carrera,zona_referencia,foto_url,updated_at`;
+
 // ── Sesion local ─────────────────────────────────────────────
 
 export function obtenerUsuarioActual() {
@@ -86,10 +90,7 @@ export async function registrarUsuario({ nombre, email, password, rol, telefono,
         estado:          'pendiente_verificacion'
     };
 
-    // Selección explícita de columnas conocidas para evitar errores si la columna
-    // `modelo_vehiculo` no está presente en el esquema (workaround temporal).
-    const safeSelectCols = `id,nombre,email,rol,matricula,placa_vehiculo,modo_actual,calificacion_prom,total_viajes,estado,verificado,created_at,password_hash,telefono,carrera,zona_referencia,foto_url,updated_at`;
-    let res = await supabase.from('usuarios').insert([insertPayload]).select(safeSelectCols).single();
+    let res = await supabase.from('usuarios').insert([insertPayload]).select('*').single();
     if (res.error) {
         const msg = String(res.error.message || '').toLowerCase();
         if (msg.includes('modelo_vehiculo') || msg.includes("column \"modelo_vehiculo\"")) {
@@ -217,7 +218,7 @@ export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona,
         updated_at:      new Date().toISOString()
     };
 
-    let upd = await supabase.from('usuarios').update(updatePayload).eq('id', usuarioId).select(safeSelectCols).single();
+    let upd = await supabase.from('usuarios').update(updatePayload).eq('id', usuarioId).select('*').single();
     if (upd.error) {
         const msg = String(upd.error.message || '').toLowerCase();
         if (msg.includes('modelo_vehiculo') || msg.includes("column \"modelo_vehiculo\"")) {

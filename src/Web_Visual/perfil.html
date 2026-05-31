@@ -171,9 +171,37 @@
     const usuario = obtenerUsuarioActual();
     if (!usuario) { window.location.href = 'index.html'; }
 
+    // DOM Elements (Initialized at the top to avoid TDZ issues during rendering/handlers)
+    const form = document.getElementById('formPerfil');
+    const btn  = document.getElementById('btnGuardar');
+    const msg  = document.getElementById('msgPerfil');
+    const modoSelect = document.getElementById('modoActual');
+    const placaInput = document.getElementById('editPlaca');
+    const placaLabel = document.querySelector('label[for="editPlaca"]');
+    const modeloLabel = document.querySelector('label[for="editModeloVehiculo"]');
+    const nombreLabel = document.querySelector('label[for="editNombre"]');
+
     // Sidebar
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    function setRequiredForConductor(isConductor) {
+        if (isConductor) {
+            placaInput.setAttribute('required', '');
+            document.getElementById('editModeloVehiculo').setAttribute('required', '');
+            document.getElementById('editNombre').setAttribute('required', '');
+            placaLabel.innerHTML = 'Placa del vehículo <span style="color:var(--rojo-error);">*</span>';
+            modeloLabel.innerHTML = 'Marca y modelo <span style="color:var(--rojo-error);">*</span>';
+            nombreLabel.innerHTML = 'Nombre Completo <span style="color:var(--rojo-error);">*</span>';
+        } else {
+            placaInput.removeAttribute('required');
+            document.getElementById('editModeloVehiculo').removeAttribute('required');
+            document.getElementById('editNombre').removeAttribute('required');
+            placaLabel.innerHTML = 'Placa del vehículo';
+            modeloLabel.innerHTML = 'Marca y modelo';
+            nombreLabel.innerHTML = 'Nombre Completo';
+        }
+    }
 
     function setSidebarMode(modo) {
         const navConductor = document.getElementById('navConductor');
@@ -201,8 +229,6 @@
             perfilRol.textContent = 'Pasajero';
         }
     }
-
-    setSidebarMode(usuario.modo_actual || 'pasajero');
 
     // Llenar tarjeta de perfil
     function renderPerfil(u) {
@@ -273,34 +299,6 @@
 
     cargarCalificaciones();
 
-    // Guardar cambios de perfil
-    const form = document.getElementById('formPerfil');
-    const btn  = document.getElementById('btnGuardar');
-    const msg  = document.getElementById('msgPerfil');
-    const modoSelect = document.getElementById('modoActual');
-    const placaInput = document.getElementById('editPlaca');
-    const placaLabel = document.querySelector('label[for="editPlaca"]');
-    const modeloLabel = document.querySelector('label[for="editModeloVehiculo"]');
-    const nombreLabel = document.querySelector('label[for="editNombre"]');
-
-    function setRequiredForConductor(isConductor) {
-        if (isConductor) {
-            placaInput.setAttribute('required', '');
-            document.getElementById('editModeloVehiculo').setAttribute('required', '');
-            document.getElementById('editNombre').setAttribute('required', '');
-            placaLabel.innerHTML = 'Placa del vehículo <span style="color:var(--rojo-error);">*</span>';
-            modeloLabel.innerHTML = 'Marca y modelo <span style="color:var(--rojo-error);">*</span>';
-            nombreLabel.innerHTML = 'Nombre Completo <span style="color:var(--rojo-error);">*</span>';
-        } else {
-            placaInput.removeAttribute('required');
-            document.getElementById('editModeloVehiculo').removeAttribute('required');
-            document.getElementById('editNombre').removeAttribute('required');
-            placaLabel.innerHTML = 'Placa del vehículo';
-            modeloLabel.innerHTML = 'Marca y modelo';
-            nombreLabel.innerHTML = 'Nombre Completo';
-        }
-    }
-
     function mostrar(texto, tipo) {
         msg.textContent = texto;
         msg.className   = `msg show msg-${tipo}`;
@@ -310,8 +308,6 @@
         const isConductor = modoSelect.value === 'conductor';
         setRequiredForConductor(isConductor);
         setSidebarMode(modoSelect.value);
-        usuario.modo_actual = modoSelect.value;
-        localStorage.setItem('uride_usuario', JSON.stringify(usuario));
 
         if (isConductor && !placaInput.value.trim()) {
             mostrar('Para activar Conductor debes completar la placa del vehículo.', 'error');
@@ -358,6 +354,11 @@
         const placaValor = document.getElementById('editPlaca').value.trim();
         if (modoActual === 'conductor' && !placaValor) {
             mostrar('Para activar Conductor debes completar la placa del vehículo.', 'error');
+            return;
+        }
+        const modeloValor = document.getElementById('editModeloVehiculo').value.trim();
+        if (modoActual === 'conductor' && !modeloValor) {
+            mostrar('Para activar Conductor debes completar la marca y modelo del vehículo.', 'error');
             return;
         }
 
