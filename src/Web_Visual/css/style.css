@@ -319,13 +319,14 @@ body.auth-page {
 .sidebar-footer .user-info strong { display: block; font-size: 14px; opacity: 1; }
 
 .sidebar-footer .btn-secondary {
-    background: rgba(255,255,255,0.10);
-    border-color: rgba(255,255,255,0.40);
+    background: transparent;
+    border-color: transparent;
     color: #fff;
     width: 100%;
     font-size: 15px;
     font-weight: 800;
     padding: 11px 16px;
+    box-shadow: none;
 }
 
 .sidebar-footer .btn-secondary:hover:not(:disabled) {
