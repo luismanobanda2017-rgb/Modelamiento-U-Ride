@@ -14,14 +14,24 @@
         <nav class="sidebar-nav">
             <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
             <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
-            <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
-            <a href="mis-viajes.html"><span class="icon">🗂️</span> Mis Viajes</a>
-            <a href="solicitudes.html"><span class="icon">📋</span> Solicitudes</a>
-            <a href="buscar-viajes.html" class="activo"><span class="icon">🔍</span> Buscar Viajes</a>
-            <a href="mis-solicitudes.html"><span class="icon">📄</span> Mis Solicitudes</a>
+            <div id="navConductor" style="display:none;">
+                <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
+                <a href="mis-viajes.html"><span class="icon">🚘</span> Mis Viajes</a>
+                <a href="solicitudes.html"><span class="icon">✉️</span> Solicitudes</a>
+            </div>
+            <div id="navPasajero" style="display:none;">
+                <a href="buscar-viajes.html" class="activo"><span class="icon">🔎</span> Buscar Viajes</a>
+                <a href="mis-solicitudes.html"><span class="icon">📝</span> Mis Solicitudes</a>
+            </div>
+            <div id="navAdmin" style="display:none;">
+                <a href="admin.html"><span class="icon">🛠️</span> Panel Admin</a>
+            </div>
         </nav>
         <div class="sidebar-footer">
-            <div class="user-info"><strong id="sidebarNombre">—</strong></div>
+            <div class="user-info">
+                <strong id="sidebarNombre">Cargando...</strong>
+                <span id="sidebarRol"></span>
+            </div>
             <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
         </div>
     </aside>
@@ -108,13 +118,19 @@
     if (!usuario) { window.location.href = 'index.html'; }
 
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
+    document.getElementById('sidebarRol').textContent    = usuario.rol === 'admin' ? 'Administrador' : (usuario.modo_actual === 'conductor' ? 'Conductor' : 'Pasajero');
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+
+    if (usuario.rol === 'admin') {
+        document.getElementById('navAdmin').style.display = 'block';
+    } else {
+        const isConductor = usuario.modo_actual === 'conductor';
+        document.getElementById('navConductor').style.display = isConductor ? 'block' : 'none';
+        document.getElementById('navPasajero').style.display = isConductor ? 'none' : 'block';
+    }
 
     let viajeSeleccionado = null;
     let asientosSeleccionados = 1;
-
-    // Cargar viajes al inicio
-    cargar({});
 
     async function cargar(filtros) {
         const lista = document.getElementById('listaResultados');
