@@ -14,16 +14,16 @@ Materia: **Modelamiento y Diseño de Software** · Ciclo Enero 2026 – Julio 20
 
 ## Sitio público
 
-🌐 **[https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/](https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/)**
+**[https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/](https://luismanobanda2017-rgb.github.io/Modelamiento-U-Ride/)**
 
 El `index.html` de la raíz redirige a `src/Web_Visual/index.html`
 
 ## Funcionalidades implementadas (revisión semana 1)
 
-- ✅ **RF1 — Registro** con correo institucional `@uta.edu.ec` + código de verificación
-- ✅ **RF1 — Inicio de sesión** con validación de estado de cuenta
-- ✅ **Recuperación de contraseña** por código de 6 dígitos
-- ✅ **RF2 — Edición de perfil** (nombre, teléfono, carrera, zona, contraseña)
+- **RF1 — Registro** con correo institucional `@uta.edu.ec` + código de verificación
+- **RF1 — Inicio de sesión** con validación de estado de cuenta
+- **Recuperación de contraseña** por código de 6 dígitos
+- **RF2 — Edición de perfil** (nombre, teléfono, carrera, zona, contraseña)
 
 ## Funcionalidades completas
 
