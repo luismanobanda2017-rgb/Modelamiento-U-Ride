@@ -210,6 +210,11 @@ export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona,
 // ── RF3: Publicar viaje ───────────────────────────────────────
 
 export async function publicarViaje({ conductorId, origen, destino, fecha, hora, cupos, precio, ruta, notas }) {
+    const cuposNum = parseInt(cupos);
+    if (cuposNum < 1 || cuposNum > 4) {
+        throw new Error('El viaje puede tener entre 1 y 4 asientos.');
+    }
+
     const { data, error } = await supabase
         .from('viajes')
         .insert([{
@@ -218,8 +223,8 @@ export async function publicarViaje({ conductorId, origen, destino, fecha, hora,
             destino:           destino.trim(),
             fecha:             fecha,
             hora_salida:       hora,
-            cupos_total:       parseInt(cupos),
-            cupos_disponibles: parseInt(cupos),
+            cupos_total:       cuposNum,
+            cupos_disponibles: cuposNum,
             precio_persona:    parseFloat(precio) || 0,
             ruta_opcional:     ruta   || null,
             notas:             notas  || null,
@@ -258,6 +263,11 @@ export async function buscarViajes({ origen, destino, fecha, cupos } = {}) {
 // ── RF5: Enviar solicitud ─────────────────────────────────────
 
 export async function enviarSolicitud(viajeId, pasajeroId, asientos = 1) {
+    const asientosNum = parseInt(asientos);
+    if (asientosNum < 1 || asientosNum > 4) {
+        throw new Error('Puedes solicitar entre 1 y 4 asientos.');
+    }
+
     const { data: viaje } = await supabase
         .from('viajes')
         .select('cupos_disponibles, conductor_id')
@@ -266,11 +276,11 @@ export async function enviarSolicitud(viajeId, pasajeroId, asientos = 1) {
 
     if (!viaje) throw new Error('Viaje no encontrado.');
     if (viaje.conductor_id === pasajeroId) throw new Error('No puedes solicitar tu propio viaje.');
-    if (viaje.cupos_disponibles < asientos) throw new Error('No hay suficientes cupos disponibles.');
+    if (viaje.cupos_disponibles < asientosNum) throw new Error('No hay suficientes cupos disponibles.');
 
     const { data, error } = await supabase
         .from('solicitudes')
-        .insert([{ viaje_id: viajeId, pasajero_id: pasajeroId, asientos, estado: 'pendiente' }])
+        .insert([{ viaje_id: viajeId, pasajero_id: pasajeroId, asientos: asientosNum, estado: 'pendiente' }])
         .select()
         .single();
 
@@ -367,6 +377,28 @@ export async function reportarUsuario({ reporteroId, reportadoId, viajeId, motiv
     if (error) throw new Error('Error al enviar reporte: ' + error.message);
     await registrarEvento(reporteroId, 'reporte_enviado', `Reporte: ${motivo}`, reportadoId);
     return data;
+}
+
+export async function subirEvidenciaReporte(archivo, usuarioId) {
+    if (!archivo) return null;
+
+    const extension = archivo.name.split('.').pop() || 'bin';
+    const nombreArchivo = `${usuarioId}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+
+    const { error } = await supabase.storage
+        .from('evidencias-reportes')
+        .upload(nombreArchivo, archivo, {
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (error) throw new Error('Error al subir evidencia: ' + error.message);
+
+    const { data } = supabase.storage
+        .from('evidencias-reportes')
+        .getPublicUrl(nombreArchivo);
+
+    return data.publicUrl;
 }
 
 // ── Trazabilidad RNF4 ─────────────────────────────────────────

@@ -49,6 +49,7 @@
         <div class="page-header">
             <h1 id="saludo">Bienvenido/a 👋</h1>
             <p id="subtitleDash">Panel principal de U-Ride</p>
+            <p id="marketplaceNote" style="font-size:13px;color:var(--texto-gris);margin-top:4px;">Un estudiante puede actuar como pasajero y conductor/a.</p>
         </div>
 
         <!-- Stats -->
@@ -122,24 +123,25 @@
 
     // Sidebar info
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
-    document.getElementById('sidebarRol').textContent    = usuario.rol.charAt(0).toUpperCase() + usuario.rol.slice(1);
+    document.getElementById('sidebarRol').textContent    = usuario.rol === 'admin' ? 'Administrador' : 'Estudiante';
     document.getElementById('saludo').textContent        = `Bienvenido/a, ${usuario.nombre.split(' ')[0]} 👋`;
-    document.getElementById('subtitleDash').textContent  = `Panel de ${usuario.rol} · U-Ride UTA`;
+    document.getElementById('subtitleDash').textContent  = usuario.rol === 'admin'
+        ? 'Panel de administración · U-Ride UTA'
+        : 'Modo pasajero y conductor · U-Ride UTA';
 
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
 
     // Mostrar nav y secciones según rol
-    if (usuario.rol === 'conductor') {
-        document.getElementById('navConductor').style.display = 'block';
-        document.getElementById('seccionConductor').style.display = 'block';
-        document.getElementById('seccionPasajero').style.display  = 'none';
-        cargarViajesConductor();
-    } else if (usuario.rol === 'admin') {
+    if (usuario.rol === 'admin') {
         document.getElementById('navAdmin').style.display    = 'block';
         document.getElementById('seccionAdmin').style.display = 'block';
         document.getElementById('seccionPasajero').style.display = 'none';
+        document.getElementById('marketplaceNote').style.display = 'none';
         cargarStatsAdmin();
     } else {
+        document.getElementById('navConductor').style.display = 'block';
+        document.getElementById('seccionConductor').style.display = 'block';
+        cargarViajesConductor();
         cargarViajesDisponibles();
     }
 

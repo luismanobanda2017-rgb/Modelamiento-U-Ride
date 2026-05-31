@@ -319,15 +319,20 @@ body.auth-page {
 .sidebar-footer .user-info strong { display: block; font-size: 14px; opacity: 1; }
 
 .sidebar-footer .btn-secondary {
-    background: #fff;
-    border-color: #fff;
-    color: var(--azul-primary);
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.40);
+    color: #fff;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 11px 16px;
 }
 
 .sidebar-footer .btn-secondary:hover:not(:disabled) {
-    background: #E8EAF6;
-    border-color: #E8EAF6;
+    background: #fff;
+    border-color: #fff;
     color: var(--azul-primary);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.16);
 }
 
 /* ── Main content ── */

@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS solicitudes (
     viaje_id     UUID NOT NULL REFERENCES viajes(id) ON DELETE CASCADE,
     pasajero_id  UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
     estado       TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aceptada', 'rechazada', 'cancelada')),
-    asientos     INTEGER NOT NULL DEFAULT 1,
+    asientos     INTEGER NOT NULL DEFAULT 1 CHECK (asientos BETWEEN 1 AND 4),
     created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(viaje_id, pasajero_id)

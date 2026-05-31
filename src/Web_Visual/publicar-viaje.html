@@ -17,6 +17,8 @@
             <a href="publicar-viaje.html" class="activo"><span class="icon">➕</span> Publicar Viaje</a>
             <a href="mis-viajes.html"><span class="icon">🗂️</span> Mis Viajes</a>
             <a href="solicitudes.html"><span class="icon">📋</span> Solicitudes</a>
+            <a href="buscar-viajes.html"><span class="icon">🔍</span> Buscar Viajes</a>
+            <a href="mis-solicitudes.html"><span class="icon">📄</span> Mis Solicitudes</a>
         </nav>
         <div class="sidebar-footer">
             <div class="user-info"><strong id="sidebarNombre">—</strong></div>
@@ -103,7 +105,7 @@
 
     const usuario = obtenerUsuarioActual();
     if (!usuario) { window.location.href = 'index.html'; }
-    if (usuario.rol !== 'conductor') { window.location.href = 'dashboard.html'; }
+    if (usuario.rol === 'admin') { window.location.href = 'dashboard.html'; }
 
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);

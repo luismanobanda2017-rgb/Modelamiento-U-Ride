@@ -14,6 +14,9 @@
         <nav class="sidebar-nav">
             <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
             <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
+            <a href="mis-viajes.html"><span class="icon">🗂️</span> Mis Viajes</a>
+            <a href="solicitudes.html"><span class="icon">📋</span> Solicitudes</a>
             <a href="buscar-viajes.html" class="activo"><span class="icon">🔍</span> Buscar Viajes</a>
             <a href="mis-solicitudes.html"><span class="icon">📄</span> Mis Solicitudes</a>
         </nav>
@@ -56,6 +59,7 @@
                             <option value="1">1 asiento</option>
                             <option value="2">2 asientos</option>
                             <option value="3">3 asientos</option>
+                            <option value="4">4 asientos</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Buscar</button>
@@ -107,6 +111,7 @@
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
 
     let viajeSeleccionado = null;
+    let asientosSeleccionados = 1;
 
     // Cargar viajes al inicio
     cargar({});
@@ -190,6 +195,12 @@
         const v = window._viajes?.find(x => x.id === viajeId);
         if (!v) return;
         viajeSeleccionado = v;
+        asientosSeleccionados = 1;
+        const maxAsientos = Math.min(4, v.cupos_disponibles || 1);
+        const opcionesAsientos = Array.from({ length: maxAsientos }, (_, i) => {
+            const valor = i + 1;
+            return `<option value="${valor}">${valor} asiento${valor > 1 ? 's' : ''}</option>`;
+        }).join('');
 
         document.getElementById('detalleContenido').innerHTML = `
             <div style="background:var(--fondo-pagina);border-radius:8px;padding:14px;margin-bottom:14px;">
@@ -197,15 +208,23 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--texto-gris);">
                     <span>📅 Fecha: <strong style="color:var(--texto-dark);">${v.fecha}</strong></span>
                     <span>🕐 Hora: <strong style="color:var(--texto-dark);">${v.hora_salida}</strong></span>
-                    <span>👥 Asientos: <strong style="color:var(--texto-dark);">1</strong></span>
-                    <span>💵 Total: <strong style="color:var(--azul-primary);font-size:16px;">$${v.precio_persona}</strong></span>
+                    <span>👥 Disponibles: <strong style="color:var(--texto-dark);">${v.cupos_disponibles}</strong></span>
+                    <span>💵 Por persona: <strong style="color:var(--azul-primary);font-size:16px;">$${v.precio_persona}</strong></span>
                 </div>
                 ${v.notas ? `<p style="font-size:12px;margin-top:8px;color:var(--texto-gris);">📝 ${v.notas}</p>` : ''}
+            </div>
+            <div class="form-group">
+                <label for="asientosSolicitud">Asientos necesarios</label>
+                <select id="asientosSolicitud">${opcionesAsientos}</select>
             </div>
             <div style="font-size:13px;color:var(--texto-gris);">
                 Conductor: <strong>${v.conductor?.nombre || '—'}</strong> · ⭐ ${v.conductor?.calificacion_prom || '—'}
             </div>
         `;
+
+        document.getElementById('asientosSolicitud').addEventListener('change', (e) => {
+            asientosSeleccionados = parseInt(e.target.value);
+        });
 
         document.getElementById('msgModal').className = 'msg';
         document.getElementById('btnConfirmarSolicitud').disabled = false;
@@ -226,7 +245,7 @@
         btn.disabled    = true;
 
         try {
-            await enviarSolicitud(viajeSeleccionado.id, usuario.id, 1);
+            await enviarSolicitud(viajeSeleccionado.id, usuario.id, asientosSeleccionados);
             msg.textContent = '✅ Solicitud enviada. El conductor revisará tu solicitud.';
             msg.className   = 'msg show msg-success';
             setTimeout(() => {

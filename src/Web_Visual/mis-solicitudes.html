@@ -14,6 +14,9 @@
         <nav class="sidebar-nav">
             <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
             <a href="perfil.html"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
+            <a href="mis-viajes.html"><span class="icon">🗂️</span> Mis Viajes</a>
+            <a href="solicitudes.html"><span class="icon">📋</span> Solicitudes</a>
             <a href="buscar-viajes.html"><span class="icon">🔍</span> Buscar Viajes</a>
             <a href="mis-solicitudes.html" class="activo"><span class="icon">📄</span> Mis Solicitudes</a>
         </nav>
@@ -57,8 +60,13 @@
             <textarea id="reporteDescripcion" rows="4" placeholder="Describe lo ocurrido..." required></textarea>
         </div>
         <div class="form-group">
-            <label for="reporteEvidencia">Evidencia opcional</label>
-            <input type="url" id="reporteEvidencia" placeholder="Link a imagen, documento o captura">
+            <label for="reporteArchivo">Evidencia opcional</label>
+            <input type="file" id="reporteArchivo" accept="image/*,.pdf,.doc,.docx">
+            <small style="color:var(--texto-gris);font-size:11px;">Puedes subir una foto/documento o pegar un link abajo.</small>
+        </div>
+        <div class="form-group">
+            <label for="reporteEvidencia">Link de evidencia opcional</label>
+            <input type="url" id="reporteEvidencia" placeholder="https://...">
         </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" id="btnCancelarReporte">Cancelar</button>
@@ -100,7 +108,7 @@
 <script type="module">
     import {
         obtenerUsuarioActual, cerrarSesion,
-        calificar, reportarUsuario, supabase
+        calificar, reportarUsuario, subirEvidenciaReporte, supabase
     } from '../Persistence/supabaseClient.js';
 
     const usuario = obtenerUsuarioActual();
@@ -194,6 +202,7 @@
         document.getElementById('reporteMotivo').value = '';
         document.getElementById('reporteDescripcion').value = '';
         document.getElementById('reporteEvidencia').value = '';
+        document.getElementById('reporteArchivo').value = '';
         document.getElementById('msgReporte').className = 'msg';
         document.getElementById('btnEnviarReporte').disabled = false;
         document.getElementById('btnEnviarReporte').textContent = 'Enviar Reporte';
@@ -208,7 +217,8 @@
     document.getElementById('btnEnviarReporte').addEventListener('click', async () => {
         const motivo = document.getElementById('reporteMotivo').value;
         const descripcion = document.getElementById('reporteDescripcion').value.trim();
-        const evidenciaUrl = document.getElementById('reporteEvidencia').value.trim();
+        const evidenciaLink = document.getElementById('reporteEvidencia').value.trim();
+        const evidenciaArchivo = document.getElementById('reporteArchivo').files[0];
         const btn = document.getElementById('btnEnviarReporte');
         const msg = document.getElementById('msgReporte');
 
@@ -222,6 +232,10 @@
         btn.textContent = 'Enviando...';
 
         try {
+            const evidenciaUrl = evidenciaArchivo
+                ? await subirEvidenciaReporte(evidenciaArchivo, usuario.id)
+                : evidenciaLink;
+
             await reportarUsuario({
                 reporteroId: usuario.id,
                 reportadoId: reporteData.reportadoId,
