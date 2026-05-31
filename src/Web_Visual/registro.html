@@ -9,9 +9,9 @@
 <body class="auth-page">
 
 <div class="auth-card" style="max-width:500px;">
-    <div class="auth-logo">ðŸš—</div>
+    <div class="auth-logo">🚗</div>
     <h1>Registro de Usuario</h1>
-    <p class="subtitle">Crea tu cuenta en U-Ride Â· Solo correos @uta.edu.ec</p>
+    <p class="subtitle">Crea tu cuenta en U-Ride · Solo correos @uta.edu.ec</p>
     <div class="badge-verificado" style="justify-content:center;margin-bottom:16px;">Pasajero / Conductor</div>
     <p style="font-size:12px;color:var(--texto-gris);margin:-6px 0 16px;">Te registras como estudiante UTA. Luego puedes usar el modo pasajero o conductor desde tu perfil.</p>
     <input type="hidden" id="rolSeleccionado" value="pasajero">
@@ -19,7 +19,7 @@
     <form id="formRegistro">
         <div class="form-group">
             <label for="nombre">Nombre Completo *</label>
-            <input type="text" id="nombre" placeholder="Ej: Juan PÃ©rez" required>
+            <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
         </div>
 
         <div class="form-group">
@@ -33,7 +33,7 @@
                 <input type="text" id="matricula" placeholder="20210001">
             </div>
             <div class="form-group">
-                <label for="telefono">TelÃ©fono (opcional)</label>
+                <label for="telefono">Teléfono (opcional)</label>
                 <input type="tel" id="telefono" placeholder="+593 99 000 0000">
             </div>
         </div>
@@ -41,7 +41,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="carrera">Carrera (opcional)</label>
-                <input type="text" id="carrera" placeholder="Ej: IngenierÃ­a en Sistemas">
+                <input type="text" id="carrera" placeholder="Ej: Ingeniería en Sistemas">
             </div>
             <div class="form-group">
                 <label for="zona">Zona / Barrio (opcional)</label>
@@ -62,12 +62,12 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label for="password">ContraseÃ±a *</label>
-                <input type="password" id="password" placeholder="MÃ­nimo 6 caracteres" required minlength="6">
+                <label for="password">Contraseña *</label>
+                <input type="password" id="password" placeholder="Mínimo 6 caracteres" required minlength="6">
             </div>
             <div class="form-group">
-                <label for="confirmar">Confirmar ContraseÃ±a *</label>
-                <input type="password" id="confirmar" placeholder="Repite la contraseÃ±a" required>
+                <label for="confirmar">Confirmar Contraseña *</label>
+                <input type="password" id="confirmar" placeholder="Repite la contraseña" required>
             </div>
         </div>
 
@@ -76,7 +76,7 @@
     </form>
 
     <hr class="divider">
-    <p class="auth-footer">Â¿Ya tienes cuenta? <a href="index.html">Inicia sesiÃ³n</a></p>
+    <p class="auth-footer">¿Ya tienes cuenta? <a href="index.html">Inicia sesión</a></p>
 </div>
 
 <script type="module">
@@ -98,7 +98,7 @@
         const confirmar = document.getElementById('confirmar').value;
 
         if (password !== confirmar) {
-            mostrar('Las contraseÃ±as no coinciden.', 'error');
+            mostrar('Las contraseñas no coinciden.', 'error');
             return;
         }
 
@@ -120,7 +120,7 @@
                 modeloVehiculo: document.getElementById('modeloVehiculo').value
             });
 
-            mostrar('âœ… Cuenta creada. Revisa tu correo @uta.edu.ec â€” te enviamos un link de verificaciÃ³n.', 'success');
+            mostrar('✓ Cuenta creada. Revisa tu correo @uta.edu.ec — te enviamos un link de verificación.', 'success');
 
             // Limpiar formulario
             form.reset();

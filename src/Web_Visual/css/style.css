@@ -48,15 +48,23 @@ body.auth-page {
 }
 
 .auth-logo {
-    font-size: 42px;
-    margin-bottom: 6px;
+    font-size: 48px;
+    margin: 0 auto 10px;
+    width: 72px;
+    height: 72px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(26, 35, 126, 0.08);
+    color: var(--azul-primary);
 }
 
 .auth-card h1 {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 800;
     color: var(--azul-primary);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
 }
 
 .auth-card .subtitle {
