@@ -215,6 +215,8 @@
         document.getElementById('modoActual').value          = u.modo_actual || 'pasajero';
         document.getElementById('sidebarRol').textContent    = u.rol === 'admin' ? 'Administrador' : (u.modo_actual === 'conductor' ? 'Conductor' : 'Pasajero');
         document.getElementById('navConductor').style.display = u.rol !== 'admin' && u.modo_actual === 'conductor' ? 'block' : 'none';
+        // Ajustar asteriscos y required según modo
+        setRequiredForConductor(u.modo_actual === 'conductor');
     }
 
     renderPerfil(usuario);
@@ -253,6 +255,22 @@
     const msg  = document.getElementById('msgPerfil');
     const modoSelect = document.getElementById('modoActual');
     const placaInput = document.getElementById('editPlaca');
+    const placaLabel = document.querySelector('label[for="editPlaca"]');
+    const modeloLabel = document.querySelector('label[for="editModeloVehiculo"]');
+
+    function setRequiredForConductor(isConductor) {
+        if (isConductor) {
+            placaInput.setAttribute('required', '');
+            document.getElementById('editModeloVehiculo').setAttribute('required', '');
+            placaLabel.innerHTML = 'Placa del vehículo <span style="color:var(--rojo-error);">*</span>';
+            modeloLabel.innerHTML = 'Marca y modelo <span style="color:var(--rojo-error);">*</span>';
+        } else {
+            placaInput.removeAttribute('required');
+            document.getElementById('editModeloVehiculo').removeAttribute('required');
+            placaLabel.innerHTML = 'Placa del vehículo';
+            modeloLabel.innerHTML = 'Marca y modelo';
+        }
+    }
 
     function mostrar(texto, tipo) {
         msg.textContent = texto;
@@ -260,7 +278,9 @@
     }
 
     modoSelect.addEventListener('change', () => {
-        if (modoSelect.value === 'conductor' && !placaInput.value.trim()) {
+        const isConductor = modoSelect.value === 'conductor';
+        setRequiredForConductor(isConductor);
+        if (isConductor && !placaInput.value.trim()) {
             mostrar('Para activar Conductor debes completar la placa del vehículo.', 'error');
         } else {
             msg.className = 'msg';

@@ -67,27 +67,36 @@ export async function registrarUsuario({ nombre, email, password, rol, telefono,
     if (!authId) throw new Error('Error al crear cuenta. Intenta de nuevo.');
 
     // Guardar datos extra en nuestra tabla usuarios
-    const { data, error } = await supabase
-        .from('usuarios')
-        .insert([{
-            id:              authId,
-            nombre:          nombre.trim(),
-            email:           emailNorm,
-            password_hash:   btoa(`${password}_uta_salt`),
-            rol:             rol || 'pasajero',
-            telefono:        telefono || null,
-            carrera:         carrera  || null,
-            zona_referencia: zona     || null,
-            matricula:       matricula || null,
-            placa_vehiculo:  placa?.trim() || null,
-            modelo_vehiculo: modeloVehiculo?.trim() || null,
-            modo_actual:     placa?.trim() ? 'conductor' : 'pasajero',
-            verificado:      false,
-            estado:          'pendiente_verificacion'
-        }])
-        .select()
-        .single();
+    // Intentar insertar incluyendo modelo_vehiculo; si la columna no existe en la DB,
+    // reintentar sin esa columna (retrocompatibilidad con esquemas antiguos).
+    const insertPayload = {
+        id:              authId,
+        nombre:          nombre.trim(),
+        email:           emailNorm,
+        password_hash:   btoa(`${password}_uta_salt`),
+        rol:             rol || 'pasajero',
+        telefono:        telefono || null,
+        carrera:         carrera  || null,
+        zona_referencia: zona     || null,
+        matricula:       matricula || null,
+        placa_vehiculo:  placa?.trim() || null,
+        modelo_vehiculo: modeloVehiculo?.trim() || null,
+        modo_actual:     placa?.trim() ? 'conductor' : 'pasajero',
+        verificado:      false,
+        estado:          'pendiente_verificacion'
+    };
 
+    let res = await supabase.from('usuarios').insert([insertPayload]).select().single();
+    if (res.error) {
+        const msg = String(res.error.message || '').toLowerCase();
+        if (msg.includes('modelo_vehiculo') || msg.includes("column \"modelo_vehiculo\"")) {
+            // reintentar sin modelo_vehiculo
+            delete insertPayload.modelo_vehiculo;
+            res = await supabase.from('usuarios').insert([insertPayload]).select().single();
+        }
+    }
+
+    const { data, error } = res;
     if (error && error.code !== '23505') {
         throw new Error('Error al guardar perfil: ' + error.message);
     }
@@ -192,24 +201,30 @@ export async function editarPerfil(usuarioId, { nombre, telefono, carrera, zona,
     if (modoActual === 'conductor' && !placa?.trim()) {
         throw new Error('Para activar el rol Conductor debes completar tu placa en el perfil.');
     }
+    // Construir payload y permitir reintento si la columna modelo_vehiculo no existe
+    const updatePayload = {
+        ...(nombre !== undefined ? { nombre: nombre?.trim() || undefined } : {}),
+        telefono:        telefono || null,
+        carrera:         carrera  || null,
+        zona_referencia: zona     || null,
+        foto_url:        foto_url || null,
+        placa_vehiculo:  placa?.trim() || null,
+        modelo_vehiculo: modeloVehiculo?.trim() || null,
+        modo_actual:     modoActual || 'pasajero',
+        updated_at:      new Date().toISOString()
+    };
 
-    const { data, error } = await supabase
-        .from('usuarios')
-        .update({
-            nombre:          nombre?.trim() || undefined,
-            telefono:        telefono || null,
-            carrera:         carrera  || null,
-            zona_referencia: zona     || null,
-            foto_url:        foto_url || null,
-            placa_vehiculo:  placa?.trim() || null,
-            modelo_vehiculo: modeloVehiculo?.trim() || null,
-            modo_actual:     modoActual || 'pasajero',
-            updated_at:      new Date().toISOString()
-        })
-        .eq('id', usuarioId)
-        .select()
-        .single();
+    let upd = await supabase.from('usuarios').update(updatePayload).eq('id', usuarioId).select().single();
+    if (upd.error) {
+        const msg = String(upd.error.message || '').toLowerCase();
+        if (msg.includes('modelo_vehiculo') || msg.includes("column \"modelo_vehiculo\"")) {
+            // reintentar sin la columna modelo_vehiculo
+            delete updatePayload.modelo_vehiculo;
+            upd = await supabase.from('usuarios').update(updatePayload).eq('id', usuarioId).select().single();
+        }
+    }
 
+    const { data, error } = upd;
     if (error) throw new Error('Error al actualizar perfil: ' + error.message);
 
     guardarSesion(data);
