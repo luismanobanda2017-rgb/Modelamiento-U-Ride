@@ -310,6 +310,9 @@
         const isConductor = modoSelect.value === 'conductor';
         setRequiredForConductor(isConductor);
         setSidebarMode(modoSelect.value);
+        usuario.modo_actual = modoSelect.value;
+        localStorage.setItem('uride_usuario', JSON.stringify(usuario));
+
         if (isConductor && !placaInput.value.trim()) {
             mostrar('Para activar Conductor debes completar la placa del vehículo.', 'error');
         } else {
