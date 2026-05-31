@@ -179,11 +179,13 @@
         const navConductor = document.getElementById('navConductor');
         const navPasajero = document.getElementById('navPasajero');
         const sidebarRol = document.getElementById('sidebarRol');
+        const perfilRol = document.getElementById('perfilRol');
 
         if (usuario.rol === 'admin') {
             navConductor.style.display = 'none';
             navPasajero.style.display = 'none';
             sidebarRol.textContent = 'Administrador';
+            perfilRol.textContent = 'Administrador';
             return;
         }
 
@@ -191,10 +193,12 @@
             navConductor.style.display = 'block';
             navPasajero.style.display = 'none';
             sidebarRol.textContent = 'Conductor';
+            perfilRol.textContent = 'Conductor';
         } else {
             navConductor.style.display = 'none';
             navPasajero.style.display = 'block';
             sidebarRol.textContent = 'Pasajero';
+            perfilRol.textContent = 'Pasajero';
         }
     }
 
@@ -382,6 +386,7 @@
                 localStorage.setItem('uride_usuario', JSON.stringify(actualizado));
             }
 
+            const modoAnterior = usuario.modo_actual;
             renderPerfil(actualizado);
             usuario.modo_actual = actualizado.modo_actual;
             usuario.placa_vehiculo = actualizado.placa_vehiculo;
@@ -392,6 +397,10 @@
             usuario.zona_referencia = actualizado.zona_referencia;
             localStorage.setItem('uride_usuario', JSON.stringify(actualizado));
             mostrar('✓ Perfil actualizado correctamente.', 'success');
+
+            if (modoAnterior !== actualizado.modo_actual) {
+                setTimeout(() => window.location.reload(), 800);
+            }
 
             // Limpiar campos de contraseña
             document.getElementById('passActual').value   = '';
