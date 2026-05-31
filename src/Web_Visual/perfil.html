@@ -307,7 +307,6 @@
     modoSelect.addEventListener('change', () => {
         const isConductor = modoSelect.value === 'conductor';
         setRequiredForConductor(isConductor);
-        setSidebarMode(modoSelect.value);
 
         if (isConductor && !placaInput.value.trim()) {
             mostrar('Para activar Conductor debes completar la placa del vehículo.', 'error');
