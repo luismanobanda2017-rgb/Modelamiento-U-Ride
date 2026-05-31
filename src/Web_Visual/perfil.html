@@ -13,23 +13,23 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
-            <h2>🚗 U-Ride</h2>
+            <h2>ðŸš— U-Ride</h2>
             <p>Viajes Seguros UTA</p>
         </div>
         <nav class="sidebar-nav">
-            <a href="dashboard.html"><span class="icon">🏠</span> Inicio</a>
-            <a href="perfil.html" class="activo"><span class="icon">👤</span> Mi Perfil</a>
+            <a href="dashboard.html"><span class="icon">ðŸ </span> Inicio</a>
+            <a href="perfil.html" class="activo"><span class="icon">ðŸ‘¤</span> Mi Perfil</a>
             <div id="navConductor" style="display:none;">
-                <a href="publicar-viaje.html"><span class="icon">➕</span> Publicar Viaje</a>
-                <a href="mis-viajes.html"><span class="icon">🚘</span> Mis Viajes</a>
-                <a href="solicitudes.html"><span class="icon">✉️</span> Solicitudes</a>
+                <a href="publicar-viaje.html"><span class="icon">âž•</span> Publicar Viaje</a>
+                <a href="mis-viajes.html"><span class="icon">ðŸš˜</span> Mis Viajes</a>
+                <a href="solicitudes.html"><span class="icon">âœ‰ï¸</span> Solicitudes</a>
             </div>
             <div id="navPasajero">
-                <a href="buscar-viajes.html"><span class="icon">🔎</span> Buscar Viajes</a>
-                <a href="mis-solicitudes.html"><span class="icon">📝</span> Mis Solicitudes</a>
+                <a href="buscar-viajes.html"><span class="icon">ðŸ”Ž</span> Buscar Viajes</a>
+                <a href="mis-solicitudes.html"><span class="icon">ðŸ“</span> Mis Solicitudes</a>
             </div>
             <div id="navAdmin" style="display:none;">
-                <a href="admin.html"><span class="icon">🛠️</span> Panel Admin</a>
+                <a href="admin.html"><span class="icon">ðŸ› ï¸</span> Panel Admin</a>
             </div>
         </nav>
         <div class="sidebar-footer">
@@ -37,7 +37,7 @@
                 <strong id="sidebarNombre">Cargando...</strong>
                 <span id="sidebarRol"></span>
             </div>
-            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar Sesión</button>
+            <button class="btn btn-secondary btn-sm" id="btnCerrarSesion">Cerrar SesiÃ³n</button>
         </div>
     </aside>
 
@@ -45,7 +45,7 @@
     <main class="main-content">
         <div class="page-header">
             <h1>Mi Perfil</h1>
-            <p>Gestiona tu información personal</p>
+            <p>Gestiona tu informaciÃ³n personal</p>
         </div>
 
         <div style="display:grid; grid-template-columns: 300px 1fr; gap:24px; align-items:start;">
@@ -53,28 +53,28 @@
             <!-- Tarjeta de perfil -->
             <div class="card" style="text-align:center;">
                 <div class="perfil-avatar" id="avatarLetras">?</div>
-                <h2 id="perfilNombre" style="font-size:20px; margin-bottom:4px;">—</h2>
-                <p id="perfilRol" style="font-size:13px; color:var(--texto-gris); margin-bottom:8px;">—</p>
+                <h2 id="perfilNombre" style="font-size:20px; margin-bottom:4px;">â€”</h2>
+                <p id="perfilRol" style="font-size:13px; color:var(--texto-gris); margin-bottom:8px;">â€”</p>
                 <div id="perfilVerificado" class="badge-verificado" style="justify-content:center; margin-bottom:12px; display:none;">
-                    ✓ Verificado
+                    âœ“ Verificado
                 </div>
-                <div class="estrellas" id="perfilEstrellas">—</div>
+                <div class="estrellas" id="perfilEstrellas">â€”</div>
                 <p style="font-size:13px; color:var(--texto-gris); margin-top:4px;">
-                    <span id="perfilCalif">—</span> · <span id="perfilViajes">0</span> viajes
+                    <span id="perfilCalif">â€”</span> Â· <span id="perfilViajes">0</span> calificaciones
                 </p>
                 <hr class="divider">
                 <div style="text-align:left; font-size:13px; color:var(--texto-gris);">
-                    <p style="margin-bottom:6px;">📧 <span id="perfilEmail">—</span></p>
-                    <p style="margin-bottom:6px;">📞 <span id="perfilTelefono">—</span></p>
-                    <p style="margin-bottom:6px;">🎓 <span id="perfilCarrera">—</span></p>
-                    <p style="margin-bottom:6px;">📍 <span id="perfilZona">—</span></p>
-                    <p style="margin-bottom:6px;">Matrícula: <span id="perfilMatricula">—</span></p>
+                    <p style="margin-bottom:6px;">ðŸ“§ <span id="perfilEmail">â€”</span></p>
+                    <p style="margin-bottom:6px;">ðŸ“ž <span id="perfilTelefono">â€”</span></p>
+                    <p style="margin-bottom:6px;">ðŸŽ“ <span id="perfilCarrera">â€”</span></p>
+                    <p style="margin-bottom:6px;">ðŸ“ <span id="perfilZona">â€”</span></p>
+                    <p style="margin-bottom:6px;">MatrÃ­cula: <span id="perfilMatricula">â€”</span></p>
                     <p style="margin-bottom:6px;">Placa: <span id="perfilPlaca">No registrada</span></p>
-                    <p>Vehículo: <span id="perfilVehiculo">No registrado</span></p>
+                    <p>VehÃ­culo: <span id="perfilVehiculo">No registrado</span></p>
                 </div>
             </div>
 
-            <!-- Formulario de edición -->
+            <!-- Formulario de ediciÃ³n -->
             <div class="card">
                 <h2 style="font-size:18px; margin-bottom:4px;">Editar Perfil</h2>
                 <p style="font-size:13px; color:var(--texto-gris); margin-bottom:20px;">
@@ -88,7 +88,7 @@
                             <option value="pasajero">Pasajero</option>
                             <option value="conductor">Conductor</option>
                         </select>
-                        <small style="color:var(--texto-gris);font-size:11px;">Para activar Conductor debes completar la placa del vehículo.</small>
+                        <small style="color:var(--texto-gris);font-size:11px;">Para activar Conductor debes completar la placa del vehÃ­culo.</small>
                     </div>
 
                     <div class="form-group">
@@ -98,22 +98,22 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editTelefono">Teléfono</label>
+                            <label for="editTelefono">TelÃ©fono</label>
                             <input type="tel" id="editTelefono" placeholder="+593 99 000 0000">
                         </div>
                         <div class="form-group">
                             <label for="editCarrera">Carrera</label>
-                            <input type="text" id="editCarrera" placeholder="Ej: Ingeniería en Sistemas">
+                            <input type="text" id="editCarrera" placeholder="Ej: IngenierÃ­a en Sistemas">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editZona">Zona / Barrio de Referencia</label>
-                            <input type="text" id="editZona" placeholder="Ej: Zona Norte, Cdla. España">
+                            <input type="text" id="editZona" placeholder="Ej: Zona Norte, Cdla. EspaÃ±a">
                         </div>
                         <div class="form-group">
-                            <label for="editPlaca">Placa del vehículo</label>
+                            <label for="editPlaca">Placa del vehÃ­culo</label>
                             <input type="text" id="editPlaca" placeholder="Ej: ABC-1234">
                         </div>
                     </div>
@@ -125,24 +125,24 @@
 
                     <hr class="divider">
 
-                    <h3 style="font-size:15px; margin-bottom:16px; color:var(--texto-dark);">Cambiar Contraseña</h3>
+                    <h3 style="font-size:15px; margin-bottom:16px; color:var(--texto-dark);">Cambiar ContraseÃ±a</h3>
                     <p style="font-size:12px; color:var(--texto-gris); margin-bottom:12px;">
-                        Deja en blanco si no deseas cambiar tu contraseña.
+                        Deja en blanco si no deseas cambiar tu contraseÃ±a.
                     </p>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="passActual">Contraseña Actual</label>
-                            <input type="password" id="passActual" placeholder="Contraseña actual">
+                            <label for="passActual">ContraseÃ±a Actual</label>
+                            <input type="password" id="passActual" placeholder="ContraseÃ±a actual">
                         </div>
                         <div class="form-group">
-                            <label for="passNueva">Nueva Contraseña</label>
-                            <input type="password" id="passNueva" placeholder="Mínimo 6 caracteres" minlength="6">
+                            <label for="passNueva">Nueva ContraseÃ±a</label>
+                            <input type="password" id="passNueva" placeholder="MÃ­nimo 6 caracteres" minlength="6">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="passConfirmar">Confirmar Nueva Contraseña</label>
-                        <input type="password" id="passConfirmar" placeholder="Repite la nueva contraseña">
+                        <label for="passConfirmar">Confirmar Nueva ContraseÃ±a</label>
+                        <input type="password" id="passConfirmar" placeholder="Repite la nueva contraseÃ±a">
                     </div>
 
                     <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar Cambios</button>
@@ -153,7 +153,7 @@
 
         <!-- Calificaciones recibidas -->
         <div class="card" style="margin-top:24px;">
-            <h2 style="font-size:18px; margin-bottom:16px;">Calificaciones Recibidas</h2>
+            <h2 id="tituloCalificaciones" style="font-size:18px; margin-bottom:16px;">Calificaciones Recibidas</h2>
             <div id="listaCalificaciones">
                 <p style="color:var(--texto-gris); font-size:14px;">Cargando calificaciones...</p>
             </div>
@@ -190,14 +190,14 @@
             placaInput.setAttribute('required', '');
             document.getElementById('editModeloVehiculo').setAttribute('required', '');
             document.getElementById('editNombre').setAttribute('required', '');
-            placaLabel.innerHTML = 'Placa del vehículo <span style="color:var(--rojo-error);">*</span>';
+            placaLabel.innerHTML = 'Placa del vehÃ­culo <span style="color:var(--rojo-error);">*</span>';
             modeloLabel.innerHTML = 'Marca y modelo <span style="color:var(--rojo-error);">*</span>';
             nombreLabel.innerHTML = 'Nombre Completo <span style="color:var(--rojo-error);">*</span>';
         } else {
             placaInput.removeAttribute('required');
             document.getElementById('editModeloVehiculo').removeAttribute('required');
             document.getElementById('editNombre').removeAttribute('required');
-            placaLabel.innerHTML = 'Placa del vehículo';
+            placaLabel.innerHTML = 'Placa del vehÃ­culo';
             modeloLabel.innerHTML = 'Marca y modelo';
             nombreLabel.innerHTML = 'Nombre Completo';
         }
@@ -206,12 +206,14 @@
     function setSidebarMode(modo) {
         const navConductor = document.getElementById('navConductor');
         const navPasajero = document.getElementById('navPasajero');
+        const navAdmin = document.getElementById('navAdmin');
         const sidebarRol = document.getElementById('sidebarRol');
         const perfilRol = document.getElementById('perfilRol');
 
         if (usuario.rol === 'admin') {
             navConductor.style.display = 'none';
             navPasajero.style.display = 'none';
+            navAdmin.style.display = 'block';
             sidebarRol.textContent = 'Administrador';
             perfilRol.textContent = 'Administrador';
             return;
@@ -232,6 +234,7 @@
 
     // Llenar tarjeta de perfil
     function renderPerfil(u) {
+        const esAdmin = u.rol === 'admin';
         const iniciales = u.nombre.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
         document.getElementById('avatarLetras').textContent  = iniciales;
         document.getElementById('perfilNombre').textContent  = u.nombre;
@@ -243,15 +246,24 @@
         document.getElementById('perfilMatricula').textContent = u.matricula || 'No registrada';
         document.getElementById('perfilPlaca').textContent = u.placa_vehiculo || 'No registrada';
         document.getElementById('perfilVehiculo').textContent = u.modelo_vehiculo || 'No registrado';
-        document.getElementById('perfilCalif').textContent    = u.calificacion_prom ? `✓ ${u.calificacion_prom}` : 'Sin calificaciones';
+        document.getElementById('perfilCalif').textContent    = u.calificacion_prom ? `âœ“ ${u.calificacion_prom}` : 'Sin calificaciones';
         document.getElementById('perfilViajes').textContent   = u.total_viajes || 0;
 
         // Estrellas
         const calif = u.calificacion_prom || 0;
-        const estrellas = '★'.repeat(Math.round(calif)) + '☆'.repeat(5 - Math.round(calif));
+        const estrellas = 'â˜…'.repeat(Math.round(calif)) + 'â˜†'.repeat(5 - Math.round(calif));
         document.getElementById('perfilEstrellas').textContent = estrellas;
 
         if (u.verificado) document.getElementById('perfilVerificado').style.display = 'flex';
+
+        document.getElementById('modoActual').closest('.form-group').style.display = esAdmin ? 'none' : 'block';
+        document.getElementById('editPlaca').closest('.form-group').style.display = esAdmin ? 'none' : 'block';
+        document.getElementById('editModeloVehiculo').closest('.form-group').style.display = esAdmin ? 'none' : 'block';
+        document.getElementById('perfilPlaca').closest('p').style.display = esAdmin ? 'none' : 'block';
+        document.getElementById('perfilVehiculo').closest('p').style.display = esAdmin ? 'none' : 'block';
+        document.getElementById('tituloCalificaciones').closest('.card').style.display = esAdmin ? 'none' : 'block';
+        document.getElementById('perfilEstrellas').style.display = esAdmin ? 'none' : 'block';
+        document.getElementById('perfilCalif').closest('p').style.display = esAdmin ? 'none' : 'block';
 
         // Llenar formulario
         document.getElementById('editNombre').value          = u.nombre;
@@ -264,32 +276,59 @@
         document.getElementById('sidebarRol').textContent    = u.rol === 'admin' ? 'Administrador' : (u.modo_actual === 'conductor' ? 'Conductor' : 'Pasajero');
         document.getElementById('navConductor').style.display = u.rol !== 'admin' && u.modo_actual === 'conductor' ? 'block' : 'none';
         document.getElementById('navPasajero').style.display = u.rol !== 'admin' && u.modo_actual !== 'conductor' ? 'block' : 'none';
+        document.getElementById('navAdmin').style.display = esAdmin ? 'block' : 'none';
         setSidebarMode(u.modo_actual || 'pasajero');
-        // Ajustar asteriscos y required según modo
-        setRequiredForConductor(u.modo_actual === 'conductor');
+        // Ajustar asteriscos y required segÃºn modo
+        setRequiredForConductor(!esAdmin && u.modo_actual === 'conductor');
     }
 
     renderPerfil(usuario);
 
     // Cargar calificaciones
     async function cargarCalificaciones() {
-        const { data } = await supabase
+        if (usuario.rol === 'admin') return;
+
+        const modoGuardado = usuario.rol === 'admin' ? null : (usuario.modo_actual || 'pasajero');
+        const tipoCalificacion = modoGuardado === 'conductor'
+            ? 'pasajero_a_conductor'
+            : 'conductor_a_pasajero';
+
+        let query = supabase
             .from('calificaciones')
             .select('*, calificador:usuarios!calificador_id(nombre)')
             .eq('calificado_id', usuario.id)
             .order('created_at', { ascending: false })
             .limit(10);
 
+        if (modoGuardado) {
+            query = query.eq('tipo', tipoCalificacion);
+        }
+
+        const { data } = await query;
         const lista = document.getElementById('listaCalificaciones');
+        document.getElementById('tituloCalificaciones').textContent = modoGuardado === 'conductor'
+            ? 'Calificaciones como Conductor'
+            : modoGuardado === 'pasajero'
+                ? 'Calificaciones como Pasajero'
+                : 'Calificaciones Recibidas';
+
+        const promedio = data && data.length
+            ? Math.round((data.reduce((s, c) => s + c.puntuacion, 0) / data.length) * 10) / 10
+            : 0;
+        document.getElementById('perfilCalif').textContent = promedio ? `âœ“ ${promedio}` : 'Sin calificaciones';
+        document.getElementById('perfilViajes').textContent = data?.length || 0;
+        document.getElementById('perfilEstrellas').textContent =
+            promedio ? 'â˜…'.repeat(Math.round(promedio)) + 'â˜†'.repeat(5 - Math.round(promedio)) : '-----';
+
         if (!data || data.length === 0) {
-            lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">Aún no tienes calificaciones.</p>';
+            lista.innerHTML = `<p style="color:var(--texto-gris);font-size:14px;">AÃºn no tienes calificaciones como ${modoGuardado || 'usuario'}.</p>`;
             return;
         }
         lista.innerHTML = data.map(c => `
             <div style="padding:14px 0; border-bottom:1px solid var(--borde);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                     <strong style="font-size:14px;">${c.calificador?.nombre || 'Usuario'}</strong>
-                    <span class="estrellas" style="font-size:16px;">${'★'.repeat(c.puntuacion)}${'☆'.repeat(5 - c.puntuacion)}</span>
+                    <span class="estrellas" style="font-size:16px;">${'â˜…'.repeat(c.puntuacion)}${'â˜†'.repeat(5 - c.puntuacion)}</span>
                 </div>
                 ${c.comentario ? `<p style="font-size:13px; color:var(--texto-gris);">${c.comentario}</p>` : ''}
                 <p style="font-size:11px; color:var(--texto-gris); margin-top:4px;">${new Date(c.created_at).toLocaleDateString('es-EC')}</p>
@@ -305,11 +344,13 @@
     }
 
     modoSelect.addEventListener('change', () => {
+        if (usuario.rol === 'admin') return;
+
         const isConductor = modoSelect.value === 'conductor';
         setRequiredForConductor(isConductor);
 
         if (isConductor && !placaInput.value.trim()) {
-            mostrar('Para activar Conductor debes completar la placa del vehículo.', 'error');
+            mostrar('Para activar Conductor debes completar la placa del vehÃ­culo.', 'error');
         } else {
             msg.className = 'msg';
         }
@@ -322,29 +363,31 @@
         const passNueva    = document.getElementById('passNueva').value;
         const passConfirmar = document.getElementById('passConfirmar').value;
 
-        // Validar cambio de contraseña si se llenó
+        // Validar cambio de contraseÃ±a si se llenÃ³
         if (passNueva || passConfirmar) {
             if (!passActual) {
-                mostrar('Ingresa tu contraseña actual para cambiarla.', 'error');
+                mostrar('Ingresa tu contraseÃ±a actual para cambiarla.', 'error');
                 return;
             }
             if (passNueva !== passConfirmar) {
-                mostrar('Las contraseñas nuevas no coinciden.', 'error');
+                mostrar('Las contraseÃ±as nuevas no coinciden.', 'error');
                 return;
             }
             if (passNueva.length < 6) {
-                mostrar('La nueva contraseña debe tener al menos 6 caracteres.', 'error');
+                mostrar('La nueva contraseÃ±a debe tener al menos 6 caracteres.', 'error');
                 return;
             }
-            // Verificar contraseña actual
+            // Verificar contraseÃ±a actual
             const hashActual = btoa(`${passActual}_uta_salt`);
             if (hashActual !== usuario.password_hash) {
-                mostrar('La contraseña actual es incorrecta.', 'error');
+                mostrar('La contraseÃ±a actual es incorrecta.', 'error');
                 return;
             }
         }
 
-        const modoActual = document.getElementById('modoActual').value;
+        const modoActual = usuario.rol === 'admin'
+            ? 'pasajero'
+            : document.getElementById('modoActual').value;
         const nombreValor = document.getElementById('editNombre').value.trim();
         if (modoActual === 'conductor' && !nombreValor) {
             mostrar('Para activar Conductor debes completar tu nombre completo.', 'error');
@@ -352,12 +395,12 @@
         }
         const placaValor = document.getElementById('editPlaca').value.trim();
         if (modoActual === 'conductor' && !placaValor) {
-            mostrar('Para activar Conductor debes completar la placa del vehículo.', 'error');
+            mostrar('Para activar Conductor debes completar la placa del vehÃ­culo.', 'error');
             return;
         }
         const modeloValor = document.getElementById('editModeloVehiculo').value.trim();
         if (modoActual === 'conductor' && !modeloValor) {
-            mostrar('Para activar Conductor debes completar la marca y modelo del vehículo.', 'error');
+            mostrar('Para activar Conductor debes completar la marca y modelo del vehÃ­culo.', 'error');
             return;
         }
 
@@ -377,7 +420,7 @@
                 modoActual: modoActual
             });
 
-            // Cambiar contraseña si se solicitó
+            // Cambiar contraseÃ±a si se solicitÃ³
             if (passNueva) {
                 await supabase
                     .from('usuarios')
@@ -399,13 +442,13 @@
             usuario.carrera = actualizado.carrera;
             usuario.zona_referencia = actualizado.zona_referencia;
             localStorage.setItem('uride_usuario', JSON.stringify(actualizado));
-            mostrar('✓ Perfil actualizado correctamente.', 'success');
+            mostrar('âœ“ Perfil actualizado correctamente.', 'success');
 
             if (modoAnterior !== actualizado.modo_actual) {
                 setTimeout(() => window.location.reload(), 800);
             }
 
-            // Limpiar campos de contraseña
+            // Limpiar campos de contraseÃ±a
             document.getElementById('passActual').value   = '';
             document.getElementById('passNueva').value    = '';
             document.getElementById('passConfirmar').value = '';
