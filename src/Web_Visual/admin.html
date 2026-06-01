@@ -46,7 +46,7 @@
         <div id="tabReportes">
             <div class="card">
                 <h2 style="font-size:16px;margin-bottom:4px;">Reportes de Usuarios</h2>
-                <p style="font-size:13px;color:var(--texto-gris);margin-bottom:16px;">Revisi&oacute;n de incidentes reportados. Puedes <strong>Advertir</strong> al usuario (recibe notificaci&oacute;n y debe confirmar), <strong>Sancionar</strong> (suspende la cuenta) o <strong>Resolver</strong> sin acci&oacute;n.</p>
+                <p style="font-size:13px;color:var(--texto-gris);margin-bottom:16px;">Revisi&oacute;n de incidentes reportados. Puedes <strong>Advertir</strong> al usuario (recibe notificaci&oacute;n y debe confirmar), <strong>Sancionar</strong> (suspende la cuenta) o <strong>Eliminar</strong> el reporte.</p>
                 <div class="tabla-wrapper">
                     <table id="tablaReportes">
                         <thead>
@@ -273,26 +273,40 @@
                 'sancion_aplicada': '🚫 Sancionado'
             }[r.accion_admin] || '';
 
-            const esImagen = r.evidencia_url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(r.evidencia_url);
-            const esVideo  = r.evidencia_url && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(r.evidencia_url);
+            const esImagen  = r.evidencia_url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(r.evidencia_url);
+            const esVideo   = r.evidencia_url && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(r.evidencia_url);
+            const esArchivo = r.evidencia_url && /\.(pdf|doc|docx)(\?|$)/i.test(r.evidencia_url);
+            // URL de Supabase Storage = archivo subido; cualquier otra URL = link externo
+            const esStorage = r.evidencia_url && r.evidencia_url.includes('supabase.co/storage');
+            const esLinkExterno = r.evidencia_url && !esStorage;
 
-            // Construir celda de evidencia mostrando archivo Y link si ambos existen
+            // Construir celda mostrando TODOS los botones que apliquen
             const celdaEvidencia = (() => {
                 const partes = [];
+
                 if (r.evidencia_url) {
-                    if (esImagen) {
+                    if (esStorage && esImagen) {
                         partes.push(`<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}','imagen')" style="width:100%;">🖼 Ver imagen</button>`);
-                    } else if (esVideo) {
+                    } else if (esStorage && esVideo) {
                         partes.push(`<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}','video')" style="width:100%;">🎥 Ver video</button>`);
-                    } else {
+                    } else if (esStorage && esArchivo) {
                         partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">📄 Ver archivo</a>`);
+                    } else if (esStorage) {
+                        // Archivo en storage sin extensión reconocida
+                        partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">📄 Ver archivo</a>`);
+                    } else if (esLinkExterno) {
+                        // Link externo (Google Drive, YouTube, etc.) guardado en evidencia_url
+                        partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">🔗 Abrir link</a>`);
                     }
                 }
+
+                // Link separado (campo evidencia_link — reportes nuevos)
                 if (r.evidencia_link) {
-                    partes.push(`<a href="${r.evidencia_link}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;margin-top:4px;">🔗 Abrir link</a>`);
+                    partes.push(`<a href="${r.evidencia_link}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">🔗 Abrir link</a>`);
                 }
+
                 return partes.length
-                    ? `<div style="display:flex;flex-direction:column;gap:4px;min-width:100px;">${partes.join('')}</div>`
+                    ? `<div style="display:flex;flex-direction:column;gap:4px;min-width:110px;">${partes.join('')}</div>`
                     : '<span style="color:var(--texto-gris);font-size:12px;">Sin evidencia</span>';
             })();
 
