@@ -291,6 +291,7 @@
                 ? await subirEvidenciaReporte(evidenciaArchivo, usuario.id)
                 : null;
 
+            console.log('Enviando reporte - evidenciaLink:', evidenciaLink);
             await reportarUsuario({
                 reporteroId: usuario.id,
                 reportadoId: reporteData.reportadoId,

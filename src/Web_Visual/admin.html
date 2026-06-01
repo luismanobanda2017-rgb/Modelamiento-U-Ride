@@ -280,7 +280,7 @@
             const esStorage = r.evidencia_url && r.evidencia_url.includes('supabase.co/storage');
             const esLinkExterno = r.evidencia_url && !esStorage;
 
-            // Construir celda mostrando TODOS los botones que apliquen
+            // Construir celda mostrando SIEMPRE ambos botones
             const celdaEvidencia = (() => {
                 const partes = [];
 
@@ -296,14 +296,11 @@
                     }
                 }
 
-                // Botón 2: Link si existe en evidencia_link
+                // Botón 2: Link - SIEMPRE mostrar
                 if (r.evidencia_link && r.evidencia_link.trim()) {
                     partes.push(`<a href="${r.evidencia_link}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">🔗 Abrir link</a>`);
-                }
-
-                // Botón 3: Link externo si está en evidencia_url (reportes viejos sin Supabase Storage)
-                if (r.evidencia_url && !r.evidencia_url.includes('supabase.co/storage')) {
-                    partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">🔗 Link externo</a>`);
+                } else {
+                    partes.push(`<span style="color:var(--texto-gris);font-size:11px;">Sin link</span>`);
                 }
 
                 return partes.length
