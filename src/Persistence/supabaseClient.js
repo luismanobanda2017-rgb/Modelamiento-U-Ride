@@ -510,3 +510,89 @@ export async function resolverReporte(reporteId, accion, adminId) {
     await registrarEvento(adminId, 'reporte_resuelto', `Accion: ${accion}`, reporteId);
     return data;
 }
+
+// Sancionar: suspende al usuario reportado y marca el reporte como resuelto
+export async function sancionarUsuario(reporteId, adminId) {
+    // Obtener el reporte para saber quién es el reportado
+    const { data: reporte, error: repErr } = await supabase
+        .from('reportes')
+        .select('reportado_id')
+        .eq('id', reporteId)
+        .single();
+    if (repErr || !reporte) throw new Error('Reporte no encontrado.');
+
+    // Suspender al usuario reportado
+    const { error: suspErr } = await supabase
+        .from('usuarios')
+        .update({ estado: 'suspendido' })
+        .eq('id', reporte.reportado_id);
+    if (suspErr) throw new Error('Error al suspender usuario: ' + suspErr.message);
+
+    // Marcar reporte como resuelto con acción sanción
+    const { data, error } = await supabase
+        .from('reportes')
+        .update({ estado: 'resuelto', accion_admin: 'sancion_suspension', updated_at: new Date().toISOString() })
+        .eq('id', reporteId)
+        .select()
+        .single();
+    if (error) throw new Error('Error al resolver reporte: ' + error.message);
+
+    await registrarEvento(adminId, 'sancion_suspension', 'Usuario suspendido por reporte', reporte.reportado_id);
+    return data;
+}
+
+// Advertir: envía una advertencia al usuario reportado
+export async function advertirUsuario(reporteId, adminId, mensaje) {
+    // Obtener el reporte para saber quién es el reportado
+    const { data: reporte, error: repErr } = await supabase
+        .from('reportes')
+        .select('reportado_id')
+        .eq('id', reporteId)
+        .single();
+    if (repErr || !reporte) throw new Error('Reporte no encontrado.');
+
+    // Insertar advertencia
+    const { error: advErr } = await supabase
+        .from('advertencias')
+        .insert([{
+            usuario_id: reporte.reportado_id,
+            reporte_id: reporteId,
+            admin_id:   adminId,
+            mensaje:    mensaje,
+            leida:      false
+        }]);
+    if (advErr) throw new Error('Error al enviar advertencia: ' + advErr.message);
+
+    // Marcar reporte como resuelto con acción advertencia
+    const { data, error } = await supabase
+        .from('reportes')
+        .update({ estado: 'resuelto', accion_admin: 'advertencia_enviada', updated_at: new Date().toISOString() })
+        .eq('id', reporteId)
+        .select()
+        .single();
+    if (error) throw new Error('Error al resolver reporte: ' + error.message);
+
+    await registrarEvento(adminId, 'advertencia_enviada', `Advertencia: ${mensaje}`, reporte.reportado_id);
+    return data;
+}
+
+// Obtener advertencias no leídas del usuario actual
+export async function obtenerAdvertenciasPendientes(usuarioId) {
+    const { data, error } = await supabase
+        .from('advertencias')
+        .select('*')
+        .eq('usuario_id', usuarioId)
+        .eq('leida', false)
+        .order('created_at', { ascending: false });
+    if (error) throw new Error('Error al obtener advertencias: ' + error.message);
+    return data || [];
+}
+
+// Marcar advertencia como leída (usuario hizo clic en "Entendido")
+export async function marcarAdvertenciaLeida(advertenciaId) {
+    const { error } = await supabase
+        .from('advertencias')
+        .update({ leida: true, updated_at: new Date().toISOString() })
+        .eq('id', advertenciaId);
+    if (error) throw new Error('Error al marcar advertencia: ' + error.message);
+}

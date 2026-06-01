@@ -25,7 +25,7 @@
     <main class="main-content">
         <div class="page-header">
             <h1>Panel Administrativo</h1>
-            <p>Gestión de usuarios y reportes · U-Ride</p>
+            <p>Gesti&oacute;n de usuarios y reportes &middot; U-Ride</p>
         </div>
 
         <!-- Stats -->
@@ -39,21 +39,21 @@
         <!-- Tabs -->
         <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--borde);">
             <button class="tab-btn activo" data-tab="reportes" onclick="cambiarTab('reportes')">⚠️ Reportes</button>
-            <button class="tab-btn" data-tab="usuarios" onclick="cambiarTab('usuarios')">👥 Gestión de Usuarios</button>
+            <button class="tab-btn" data-tab="usuarios" onclick="cambiarTab('usuarios')">👥 Gesti&oacute;n de Usuarios</button>
         </div>
 
         <!-- Tab Reportes -->
         <div id="tabReportes">
             <div class="card">
-                <h2 style="font-size:16px;margin-bottom:4px;">Reportes Pendientes</h2>
-                <p style="font-size:13px;color:var(--texto-gris);margin-bottom:16px;">Revisión de incidentes reportados por usuarios</p>
+                <h2 style="font-size:16px;margin-bottom:4px;">Reportes de Usuarios</h2>
+                <p style="font-size:13px;color:var(--texto-gris);margin-bottom:16px;">Revisi&oacute;n de incidentes reportados. Puedes <strong>Advertir</strong> al usuario (recibe notificaci&oacute;n y debe confirmar), <strong>Sancionar</strong> (suspende la cuenta) o <strong>Resolver</strong> sin acci&oacute;n.</p>
                 <div class="tabla-wrapper">
                     <table id="tablaReportes">
                         <thead>
                             <tr>
                                 <th>Reportero</th>
                                 <th>Reportado</th>
-                                <th>Motivo</th>
+                                <th>Motivo / Descripci&oacute;n</th>
                                 <th>Evidencia</th>
                                 <th>Fecha</th>
                                 <th>Estado</th>
@@ -73,7 +73,7 @@
             <div class="card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                     <div>
-                        <h2 style="font-size:16px;margin-bottom:4px;">Gestión de Usuarios</h2>
+                        <h2 style="font-size:16px;margin-bottom:4px;">Gesti&oacute;n de Usuarios</h2>
                         <p style="font-size:13px;color:var(--texto-gris);">Administrar y moderar usuarios de la plataforma</p>
                     </div>
                     <input type="text" id="buscarUsuario" placeholder="🔍 Buscar usuarios..." style="padding:8px 12px;border:1px solid var(--borde);border-radius:8px;font-size:13px;width:220px;outline:none;">
@@ -84,9 +84,9 @@
                             <tr>
                                 <th>Usuario</th>
                                 <th>Correo</th>
-                                <th>Rol</th>
-                                <th>Matrícula</th>
-                                <th>Calificación</th>
+                                <th>Rol / Modo</th>
+                                <th>Matr&iacute;cula</th>
+                                <th>Calificaci&oacute;n</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
@@ -102,27 +102,63 @@
     </main>
 </div>
 
-<!-- Modal sancionar -->
+<!-- ── Modal: Ver Evidencia ─────────────────────────────── -->
+<div class="modal-overlay hidden" id="modalEvidencia">
+    <div class="modal" style="max-width:600px;">
+        <button class="modal-close" id="btnCerrarEvidencia">✕</button>
+        <h2>Evidencia del Reporte</h2>
+        <div id="contenidoEvidencia" style="margin-top:16px;text-align:center;"></div>
+    </div>
+</div>
+
+<!-- ── Modal: Advertir ──────────────────────────────────── -->
+<div class="modal-overlay hidden" id="modalAdvertir">
+    <div class="modal">
+        <button class="modal-close" id="btnCerrarAdvertir">✕</button>
+        <h2>⚠️ Enviar Advertencia</h2>
+        <p id="textoAdvertir" style="font-size:14px;color:var(--texto-gris);margin-bottom:16px;">—</p>
+        <div class="form-group">
+            <label for="mensajeAdvertencia">Mensaje de advertencia <span style="color:var(--rojo-error);">*</span></label>
+            <textarea id="mensajeAdvertencia" rows="4" placeholder="Ej: Tu comportamiento durante el viaje fue inapropiado. Por favor respeta las normas de convivencia de U-Ride. Una reincidencia resultará en la suspensión de tu cuenta." style="resize:vertical;"></textarea>
+        </div>
+        <p style="font-size:12px;color:var(--texto-gris);">El usuario recibirá esta advertencia y deberá hacer clic en <strong>"Entendido"</strong> para confirmar que la leyó.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="btnCancelarAdvertir">Cancelar</button>
+            <button class="btn btn-primary" id="btnEnviarAdvertencia">Enviar Advertencia</button>
+        </div>
+        <div id="msgAdvertir" class="msg"></div>
+    </div>
+</div>
+
+<!-- ── Modal: Sancionar (suspender) ────────────────────── -->
 <div class="modal-overlay hidden" id="modalSancionar">
     <div class="modal">
-        <h2>Aplicar Sanción</h2>
-        <p id="textoSancionar">—</p>
+        <button class="modal-close" id="btnCerrarSancion">✕</button>
+        <h2>🚫 Aplicar Sanción</h2>
+        <p id="textoSancionar" style="font-size:14px;color:var(--texto-gris);margin-bottom:16px;">—</p>
+        <div class="msg msg-error show" style="font-size:13px;margin-bottom:16px;">
+            ⚠️ Esta acción <strong>suspenderá la cuenta</strong> del usuario. No podrá acceder a la plataforma hasta que un administrador reactive su cuenta.
+        </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" id="btnCancelarSancion">Cancelar</button>
-            <button class="btn btn-danger" id="btnAplicarSancion">Aplicar Sanción</button>
+            <button class="btn btn-danger" id="btnAplicarSancion">Suspender Usuario</button>
         </div>
         <div id="msgSancion" class="msg"></div>
     </div>
 </div>
 
-<!-- Modal suspender -->
+<!-- ── Modal: Suspender desde Gestión de Usuarios ──────── -->
 <div class="modal-overlay hidden" id="modalSuspender">
     <div class="modal">
-        <h2>Suspender Usuario</h2>
-        <p id="textoSuspender">—</p>
+        <button class="modal-close" id="btnCerrarSuspender">✕</button>
+        <h2>🚫 Suspender Usuario</h2>
+        <p id="textoSuspender" style="font-size:14px;color:var(--texto-gris);margin-bottom:16px;">—</p>
+        <div class="msg msg-error show" style="font-size:13px;margin-bottom:16px;">
+            El usuario no podrá acceder a la plataforma hasta que se reactive su cuenta.
+        </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" id="btnCancelarSuspender">Cancelar</button>
-            <button class="btn btn-danger" id="btnConfirmarSuspender">Suspender</button>
+            <button class="btn btn-danger" id="btnConfirmarSuspender">Confirmar Suspensión</button>
         </div>
         <div id="msgSuspender" class="msg"></div>
     </div>
@@ -145,6 +181,37 @@
     color: var(--azul-primary);
     border-bottom-color: var(--azul-primary);
 }
+.tabla-wrapper {
+    overflow-x: auto;
+}
+.tabla-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.tabla-wrapper th {
+    background: var(--fondo-pagina);
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--texto-gris);
+    border-bottom: 2px solid var(--borde);
+    white-space: nowrap;
+}
+.tabla-wrapper td {
+    padding: 12px;
+    border-bottom: 1px solid var(--borde);
+    vertical-align: top;
+}
+.tabla-wrapper tr:hover td {
+    background: var(--fondo-pagina);
+}
+.evidencia-img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 8px;
+    border: 1px solid var(--borde);
+}
 </style>
 
 <script type="module">
@@ -152,6 +219,7 @@
         obtenerUsuarioActual, cerrarSesion,
         obtenerReportes, obtenerUsuarios,
         suspenderUsuario, resolverReporte,
+        sancionarUsuario, advertirUsuario,
         supabase
     } from '../Persistence/supabaseClient.js';
 
@@ -163,10 +231,10 @@
     document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
 
     let todosUsuarios = [];
-    let reporteSeleccionado = null;
-    let usuarioSeleccionado = null;
+    let reporteSeleccionado = null;   // { id, nombre }
+    let usuarioSeleccionado = null;   // uid
 
-    // Tabs
+    // ── Tabs ──────────────────────────────────────────────────
     window.cambiarTab = function(tab) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activo'));
         document.querySelector(`[data-tab="${tab}"]`).classList.add('activo');
@@ -174,19 +242,20 @@
         document.getElementById('tabUsuarios').style.display = tab === 'usuarios'  ? 'block' : 'none';
     };
 
+    // ── Stats ─────────────────────────────────────────────────
     async function cargarStats() {
         const [usuarios, reportes, viajes] = await Promise.all([
             obtenerUsuarios(),
             obtenerReportes(),
             supabase.from('viajes').select('id', { count: 'exact' })
         ]);
-
         document.getElementById('stTotal').textContent  = usuarios.length;
         document.getElementById('stPend').textContent   = reportes.filter(r => r.estado === 'pendiente').length;
         document.getElementById('stSusp').textContent   = usuarios.filter(u => u.estado === 'suspendido').length;
         document.getElementById('stViajes').textContent = viajes.count || 0;
     }
 
+    // ── Reportes ──────────────────────────────────────────────
     async function cargarReportes() {
         const reportes = await obtenerReportes();
         const tbody = document.getElementById('bodyReportes');
@@ -196,31 +265,51 @@
             return;
         }
 
-        tbody.innerHTML = reportes.map(r => `
+        tbody.innerHTML = reportes.map(r => {
+            const accionLabel = {
+                'sancion_suspension': '🚫 Suspendido',
+                'advertencia_enviada': '⚠️ Advertido',
+                'revisado': '✔ Revisado',
+                'sancion_aplicada': '🚫 Sancionado'
+            }[r.accion_admin] || '';
+
+            const esImagen = r.evidencia_url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(r.evidencia_url);
+            const esPdf    = r.evidencia_url && /\.pdf(\?|$)/i.test(r.evidencia_url);
+
+            return `
             <tr>
-                <td>${r.reportero?.nombre || '—'}</td>
-                <td><strong>${r.reportado?.nombre || '—'}</strong></td>
-                <td style="max-width:220px;font-size:13px;">
-                    <strong>${r.motivo}</strong>
-                    ${r.descripcion ? `<br><span style="color:var(--texto-gris);">${r.descripcion}</span>` : ''}
+                <td style="white-space:nowrap;">${r.reportero?.nombre || '—'}<br><span style="font-size:11px;color:var(--texto-gris);">${r.reportero?.email || ''}</span></td>
+                <td style="white-space:nowrap;"><strong>${r.reportado?.nombre || '—'}</strong><br><span style="font-size:11px;color:var(--texto-gris);">${r.reportado?.email || ''}</span></td>
+                <td style="max-width:200px;">
+                    <strong style="text-transform:capitalize;">${(r.motivo || '').replace(/_/g,' ')}</strong>
+                    ${r.descripcion ? `<br><span style="color:var(--texto-gris);font-size:12px;">${r.descripcion}</span>` : ''}
                 </td>
-                <td style="font-size:12px;">
-                    ${r.evidencia_url ? `<a href="${r.evidencia_url}" target="_blank" rel="noopener">Ver evidencia</a>` : '—'}
+                <td style="text-align:center;">
+                    ${r.evidencia_url
+                        ? `<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}', ${esImagen})">
+                               👁 Ver
+                           </button>`
+                        : '<span style="color:var(--texto-gris);font-size:12px;">Sin evidencia</span>'}
                 </td>
-                <td style="font-size:12px;">${new Date(r.created_at).toLocaleDateString('es-EC')}</td>
-                <td><span class="badge badge-${r.estado === 'pendiente' ? 'pendiente' : r.estado === 'resuelto' ? 'activo' : 'verificado'}">${r.estado}</span></td>
+                <td style="font-size:12px;white-space:nowrap;">${new Date(r.created_at).toLocaleDateString('es-EC')}</td>
                 <td>
-                    <div style="display:flex;gap:6px;">
+                    <span class="badge badge-${r.estado === 'pendiente' ? 'pendiente' : 'activo'}">${r.estado}</span>
+                    ${accionLabel ? `<br><span style="font-size:11px;color:var(--texto-gris);margin-top:2px;display:block;">${accionLabel}</span>` : ''}
+                </td>
+                <td>
+                    <div style="display:flex;flex-direction:column;gap:6px;min-width:110px;">
                         ${r.estado !== 'resuelto' ? `
-                            <button class="btn btn-danger btn-sm" onclick="abrirSancionar('${r.id}', '${r.reportado?.nombre}')">Sancionar</button>
-                            <button class="btn btn-secondary btn-sm" onclick="resolverR('${r.id}', 'revisado')">Resolver</button>
-                        ` : '<span style="color:var(--verde-ok);font-size:13px;">✔ Resuelto</span>'}
+                            <button class="btn btn-primary btn-sm" onclick="abrirAdvertir('${r.id}', '${(r.reportado?.nombre || '').replace(/'/g,"\\'")}')">⚠️ Advertir</button>
+                            <button class="btn btn-danger btn-sm" onclick="abrirSancionar('${r.id}', '${(r.reportado?.nombre || '').replace(/'/g,"\\'")}')">🚫 Sancionar</button>
+                            <button class="btn btn-secondary btn-sm" onclick="resolverSinAccion('${r.id}')">✔ Resolver</button>
+                        ` : `<span style="color:var(--verde-ok);font-size:13px;">✔ Resuelto</span>`}
                     </div>
                 </td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     }
 
+    // ── Usuarios ──────────────────────────────────────────────
     async function cargarUsuarios(filtro = '') {
         todosUsuarios = await obtenerUsuarios();
         const filtrados = filtro
@@ -234,16 +323,24 @@
             <tr>
                 <td><strong>${u.nombre}</strong></td>
                 <td style="font-size:12px;">${u.email}</td>
-                <td><span class="badge badge-${u.rol === 'admin' ? 'verificado' : u.rol === 'conductor' ? 'disponible' : 'pendiente'}">${u.rol}</span></td>
+                <td>
+                    <span class="badge badge-${u.rol === 'admin' ? 'verificado' : u.modo_actual === 'conductor' ? 'disponible' : 'pendiente'}">
+                        ${u.rol === 'admin' ? 'Admin' : u.modo_actual === 'conductor' ? 'Conductor' : 'Pasajero'}
+                    </span>
+                </td>
                 <td style="font-size:13px;">${u.matricula || '—'}</td>
                 <td>⭐ ${u.calificacion_prom || '—'}</td>
-                <td><span class="badge badge-${u.estado === 'activo' ? 'activo' : u.estado === 'suspendido' ? 'suspendido' : 'pendiente'}">${u.estado}</span></td>
                 <td>
-                    <div style="display:flex;gap:6px;">
+                    <span class="badge badge-${u.estado === 'activo' ? 'activo' : u.estado === 'suspendido' ? 'suspendido' : 'pendiente'}">
+                        ${u.estado}
+                    </span>
+                </td>
+                <td>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
                         ${u.estado !== 'suspendido' && u.rol !== 'admin' ? `
-                            <button class="btn btn-danger btn-sm" onclick="abrirSuspender('${u.id}', '${u.nombre}')">Suspender</button>
+                            <button class="btn btn-danger btn-sm" onclick="abrirSuspender('${u.id}', '${u.nombre.replace(/'/g,"\\'")}')">🚫 Suspender</button>
                         ` : u.estado === 'suspendido' ? `
-                            <button class="btn btn-secondary btn-sm" onclick="reactivar('${u.id}')">Reactivar</button>
+                            <button class="btn btn-secondary btn-sm" onclick="reactivar('${u.id}')">✔ Reactivar</button>
                         ` : '—'}
                     </div>
                 </td>
@@ -251,57 +348,132 @@
         `).join('');
     }
 
-    // Buscar usuarios
     document.getElementById('buscarUsuario').addEventListener('input', (e) => {
         cargarUsuarios(e.target.value);
     });
 
-    // Sancionar
+    // ── Ver Evidencia ─────────────────────────────────────────
+    window.verEvidencia = function(url, esImagen) {
+        const contenido = document.getElementById('contenidoEvidencia');
+        if (esImagen) {
+            contenido.innerHTML = `<img src="${url}" alt="Evidencia" class="evidencia-img"><br>
+                <a href="${url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="margin-top:12px;display:inline-block;">Abrir en nueva pestaña</a>`;
+        } else {
+            contenido.innerHTML = `
+                <div style="font-size:48px;margin-bottom:12px;">📄</div>
+                <p style="color:var(--texto-gris);font-size:14px;margin-bottom:16px;">Archivo adjunto como evidencia</p>
+                <a href="${url}" target="_blank" rel="noopener" class="btn btn-primary">Descargar / Ver Evidencia</a>`;
+        }
+        document.getElementById('modalEvidencia').classList.remove('hidden');
+    };
+
+    document.getElementById('btnCerrarEvidencia').addEventListener('click', () =>
+        document.getElementById('modalEvidencia').classList.add('hidden'));
+
+    // ── Advertir ──────────────────────────────────────────────
+    window.abrirAdvertir = function(reporteId, nombre) {
+        reporteSeleccionado = reporteId;
+        document.getElementById('textoAdvertir').textContent =
+            `Enviar advertencia a: ${nombre}`;
+        document.getElementById('mensajeAdvertencia').value = '';
+        document.getElementById('msgAdvertir').className = 'msg';
+        document.getElementById('btnEnviarAdvertencia').disabled = false;
+        document.getElementById('btnEnviarAdvertencia').textContent = 'Enviar Advertencia';
+        document.getElementById('modalAdvertir').classList.remove('hidden');
+    };
+
+    document.getElementById('btnCerrarAdvertir').addEventListener('click', () =>
+        document.getElementById('modalAdvertir').classList.add('hidden'));
+    document.getElementById('btnCancelarAdvertir').addEventListener('click', () =>
+        document.getElementById('modalAdvertir').classList.add('hidden'));
+
+    document.getElementById('btnEnviarAdvertencia').addEventListener('click', async () => {
+        const mensaje = document.getElementById('mensajeAdvertencia').value.trim();
+        const btn = document.getElementById('btnEnviarAdvertencia');
+        const msg = document.getElementById('msgAdvertir');
+
+        if (!mensaje) {
+            msg.textContent = 'Escribe el mensaje de advertencia.';
+            msg.className = 'msg show msg-error';
+            return;
+        }
+
+        btn.disabled = true; btn.textContent = 'Enviando...';
+        try {
+            await advertirUsuario(reporteSeleccionado, usuario.id, mensaje);
+            msg.textContent = '✅ Advertencia enviada. El usuario la verá al iniciar sesión.';
+            msg.className = 'msg show msg-success';
+            setTimeout(() => {
+                document.getElementById('modalAdvertir').classList.add('hidden');
+                cargarReportes(); cargarStats();
+            }, 1800);
+        } catch (err) {
+            msg.textContent = err.message;
+            msg.className = 'msg show msg-error';
+            btn.disabled = false; btn.textContent = 'Enviar Advertencia';
+        }
+    });
+
+    // ── Sancionar (suspende al usuario) ───────────────────────
     window.abrirSancionar = function(reporteId, nombre) {
         reporteSeleccionado = reporteId;
         document.getElementById('textoSancionar').textContent =
-            `¿Aplicar sanción a ${nombre}? Esta acción puede resultar en la suspensión temporal del usuario.`;
+            `¿Suspender la cuenta de ${nombre}?`;
         document.getElementById('msgSancion').className = 'msg';
+        document.getElementById('btnAplicarSancion').disabled = false;
+        document.getElementById('btnAplicarSancion').textContent = 'Suspender Usuario';
         document.getElementById('modalSancionar').classList.remove('hidden');
     };
 
+    document.getElementById('btnCerrarSancion').addEventListener('click', () =>
+        document.getElementById('modalSancionar').classList.add('hidden'));
     document.getElementById('btnCancelarSancion').addEventListener('click', () =>
         document.getElementById('modalSancionar').classList.add('hidden'));
 
     document.getElementById('btnAplicarSancion').addEventListener('click', async () => {
         const btn = document.getElementById('btnAplicarSancion');
         const msg = document.getElementById('msgSancion');
-        btn.disabled = true; btn.textContent = 'Aplicando...';
+        btn.disabled = true; btn.textContent = 'Suspendiendo...';
 
         try {
-            await resolverReporte(reporteSeleccionado, 'sancion_aplicada', usuario.id);
-            msg.textContent = '✅ Sanción aplicada al usuario.';
-            msg.className   = 'msg show msg-success';
+            await sancionarUsuario(reporteSeleccionado, usuario.id);
+            msg.textContent = '✅ Usuario suspendido correctamente.';
+            msg.className = 'msg show msg-success';
             setTimeout(() => {
                 document.getElementById('modalSancionar').classList.add('hidden');
-                cargarReportes(); cargarStats();
-            }, 1500);
+                cargarReportes(); cargarUsuarios(); cargarStats();
+            }, 1800);
         } catch (err) {
             msg.textContent = err.message;
-            msg.className   = 'msg show msg-error';
-            btn.disabled    = false; btn.textContent = 'Aplicar Sanción';
+            msg.className = 'msg show msg-error';
+            btn.disabled = false; btn.textContent = 'Suspender Usuario';
         }
     });
 
-    window.resolverR = async function(reporteId, accion) {
-        await resolverReporte(reporteId, accion, usuario.id);
-        cargarReportes(); cargarStats();
+    // ── Resolver sin acción ───────────────────────────────────
+    window.resolverSinAccion = async function(reporteId) {
+        if (!confirm('¿Resolver este reporte sin aplicar ninguna acción?')) return;
+        try {
+            await resolverReporte(reporteId, 'sin_accion', usuario.id);
+            cargarReportes(); cargarStats();
+        } catch (err) {
+            alert(err.message);
+        }
     };
 
-    // Suspender
+    // ── Suspender desde Gestión de Usuarios ───────────────────
     window.abrirSuspender = function(uid, nombre) {
         usuarioSeleccionado = uid;
         document.getElementById('textoSuspender').textContent =
             `¿Suspender a ${nombre}? El usuario no podrá acceder a la plataforma hasta que se reactive su cuenta.`;
         document.getElementById('msgSuspender').className = 'msg';
+        document.getElementById('btnConfirmarSuspender').disabled = false;
+        document.getElementById('btnConfirmarSuspender').textContent = 'Confirmar Suspensión';
         document.getElementById('modalSuspender').classList.remove('hidden');
     };
 
+    document.getElementById('btnCerrarSuspender').addEventListener('click', () =>
+        document.getElementById('modalSuspender').classList.add('hidden'));
     document.getElementById('btnCancelarSuspender').addEventListener('click', () =>
         document.getElementById('modalSuspender').classList.add('hidden'));
 
@@ -312,25 +484,28 @@
 
         try {
             await suspenderUsuario(usuarioSeleccionado, usuario.id);
-            msg.textContent = '✅ Usuario suspendido.';
-            msg.className   = 'msg show msg-success';
+            msg.textContent = '✅ Usuario suspendido correctamente.';
+            msg.className = 'msg show msg-success';
             setTimeout(() => {
                 document.getElementById('modalSuspender').classList.add('hidden');
                 cargarUsuarios(); cargarStats();
             }, 1500);
         } catch (err) {
             msg.textContent = err.message;
-            msg.className   = 'msg show msg-error';
-            btn.disabled    = false; btn.textContent = 'Suspender';
+            msg.className = 'msg show msg-error';
+            btn.disabled = false; btn.textContent = 'Confirmar Suspensión';
         }
     });
 
+    // ── Reactivar usuario ─────────────────────────────────────
     window.reactivar = async function(uid) {
-        await supabase.from('usuarios').update({ estado: 'activo' }).eq('id', uid);
+        if (!confirm('¿Reactivar la cuenta de este usuario?')) return;
+        const { error } = await supabase.from('usuarios').update({ estado: 'activo' }).eq('id', uid);
+        if (error) { alert('Error al reactivar: ' + error.message); return; }
         cargarUsuarios(); cargarStats();
     };
 
-    // Inicializar
+    // ── Inicializar ───────────────────────────────────────────
     cargarStats();
     cargarReportes();
     cargarUsuarios();

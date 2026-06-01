@@ -51,6 +51,9 @@
             <p id="subtitleDash">Panel principal de U-Ride</p>
         </div>
 
+        <!-- Banner de advertencias del admin (se inyecta dinámicamente) -->
+        <div id="bannerAdvertencias"></div>
+
         <!-- Stats -->
         <div class="stats-grid" id="statsGrid">
             <!-- Se llenan dinamicamente -->
@@ -114,11 +117,66 @@
         obtenerUsuarioActual, cerrarSesion,
         buscarViajes, publicarViaje,
         obtenerUsuarios, obtenerReportes,
-        supabase, refrescarPerfil
+        supabase, refrescarPerfil,
+        obtenerAdvertenciasPendientes, marcarAdvertenciaLeida
     } from '../Persistence/supabaseClient.js';
 
     const usuario = await refrescarPerfil() || obtenerUsuarioActual();
     if (!usuario) { window.location.href = 'index.html'; }
+
+    // ── Advertencias pendientes ───────────────────────────────
+    if (usuario.rol !== 'admin') {
+        try {
+            const advertencias = await obtenerAdvertenciasPendientes(usuario.id);
+            if (advertencias.length > 0) {
+                const banner = document.getElementById('bannerAdvertencias');
+                banner.innerHTML = advertencias.map(adv => `
+                    <div id="adv-${adv.id}" style="
+                        background: #FFF3CD;
+                        border: 2px solid #FFC107;
+                        border-radius: 12px;
+                        padding: 20px 24px;
+                        margin: 0 0 16px 0;
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 16px;
+                    ">
+                        <div style="font-size:32px;flex-shrink:0;">⚠️</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700;font-size:16px;color:#856404;margin-bottom:6px;">
+                                Advertencia del Administrador
+                            </div>
+                            <p style="font-size:14px;color:#533f03;margin-bottom:14px;line-height:1.5;">
+                                ${adv.mensaje}
+                            </p>
+                            <p style="font-size:12px;color:#856404;margin-bottom:12px;">
+                                Recibida: ${new Date(adv.created_at).toLocaleString('es-EC')}
+                            </p>
+                            <button
+                                class="btn btn-primary btn-sm"
+                                onclick="confirmarAdvertencia('${adv.id}')"
+                                style="background:#856404;border-color:#856404;">
+                                ✔ Entendido
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) {
+            // Si la tabla advertencias no existe aún, ignorar silenciosamente
+            console.warn('Advertencias no disponibles:', e.message);
+        }
+    }
+
+    window.confirmarAdvertencia = async function(advId) {
+        try {
+            await marcarAdvertenciaLeida(advId);
+            const el = document.getElementById(`adv-${advId}`);
+            if (el) el.remove();
+        } catch (e) {
+            console.error('Error al marcar advertencia:', e.message);
+        }
+    };
 
     // Sidebar info
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
