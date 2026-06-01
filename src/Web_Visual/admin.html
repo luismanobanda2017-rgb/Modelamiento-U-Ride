@@ -284,29 +284,30 @@
             const celdaEvidencia = (() => {
                 const partes = [];
 
-                if (r.evidencia_url) {
-                    if (esStorage && esImagen) {
-                        partes.push(`<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}','imagen')" style="width:100%;">🖼 Ver imagen</button>`);
-                    } else if (esStorage && esVideo) {
-                        partes.push(`<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}','video')" style="width:100%;">🎥 Ver video</button>`);
-                    } else if (esStorage && esArchivo) {
+                // Botón 1: Imagen/Video/Archivo si existe en Supabase Storage
+                if (r.evidencia_url && r.evidencia_url.includes('supabase.co/storage')) {
+                    const urlEscapada = r.evidencia_url.replace(/'/g, "\\'");
+                    if (esImagen) {
+                        partes.push(`<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${urlEscapada}','imagen')" style="width:100%;">🖼 Ver imagen</button>`);
+                    } else if (esVideo) {
+                        partes.push(`<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${urlEscapada}','video')" style="width:100%;">🎥 Ver video</button>`);
+                    } else {
                         partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">📄 Ver archivo</a>`);
-                    } else if (esStorage) {
-                        // Archivo en storage sin extensión reconocida
-                        partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">📄 Ver archivo</a>`);
-                    } else if (esLinkExterno) {
-                        // Link externo (Google Drive, YouTube, etc.) guardado en evidencia_url
-                        partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">🔗 Abrir link</a>`);
                     }
                 }
 
-                // Link separado (campo evidencia_link — reportes nuevos)
-                if (r.evidencia_link) {
+                // Botón 2: Link si existe en evidencia_link
+                if (r.evidencia_link && r.evidencia_link.trim()) {
                     partes.push(`<a href="${r.evidencia_link}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">🔗 Abrir link</a>`);
                 }
 
+                // Botón 3: Link externo si está en evidencia_url (reportes viejos sin Supabase Storage)
+                if (r.evidencia_url && !r.evidencia_url.includes('supabase.co/storage')) {
+                    partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">🔗 Link externo</a>`);
+                }
+
                 return partes.length
-                    ? `<div style="display:flex;flex-direction:column;gap:4px;min-width:110px;">${partes.join('')}</div>`
+                    ? `<div style="display:flex;flex-direction:column;gap:6px;min-width:110px;">${partes.join('')}</div>`
                     : '<span style="color:var(--texto-gris);font-size:12px;">Sin evidencia</span>';
             })();
 
