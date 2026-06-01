@@ -296,11 +296,9 @@
                     }
                 }
 
-                // Botón 2: Link - SIEMPRE mostrar
+                // Botón 2: Link si existe en evidencia_link
                 if (r.evidencia_link && r.evidencia_link.trim()) {
                     partes.push(`<a href="${r.evidencia_link}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">🔗 Abrir link</a>`);
-                } else {
-                    partes.push(`<span style="color:var(--texto-gris);font-size:11px;">Sin link</span>`);
                 }
 
                 return partes.length
