@@ -274,7 +274,6 @@
             }[r.accion_admin] || '';
 
             const esImagen = r.evidencia_url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(r.evidencia_url);
-            const esPdf    = r.evidencia_url && /\.pdf(\?|$)/i.test(r.evidencia_url);
 
             return `
             <tr>
@@ -286,9 +285,9 @@
                 </td>
                 <td style="text-align:center;">
                     ${r.evidencia_url
-                        ? `<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}', ${esImagen})">
-                               👁 Ver
-                           </button>`
+                        ? (esImagen
+                            ? `<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}', true)">🖼 Ver imagen</button>`
+                            : `<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🔗 Abrir link</a>`)
                         : '<span style="color:var(--texto-gris);font-size:12px;">Sin evidencia</span>'}
                 </td>
                 <td style="font-size:12px;white-space:nowrap;">${new Date(r.created_at).toLocaleDateString('es-EC')}</td>
@@ -301,8 +300,11 @@
                         ${r.estado !== 'resuelto' ? `
                             <button class="btn btn-primary btn-sm" onclick="abrirAdvertir('${r.id}', '${(r.reportado?.nombre || '').replace(/'/g,"\\'")}')">⚠️ Advertir</button>
                             <button class="btn btn-danger btn-sm" onclick="abrirSancionar('${r.id}', '${(r.reportado?.nombre || '').replace(/'/g,"\\'")}')">🚫 Sancionar</button>
-                            <button class="btn btn-secondary btn-sm" onclick="resolverSinAccion('${r.id}')">✔ Resolver</button>
-                        ` : `<span style="color:var(--verde-ok);font-size:13px;">✔ Resuelto</span>`}
+                            <button class="btn btn-secondary btn-sm" onclick="resolverSinAccion('${r.id}')" style="color:var(--rojo-error);border-color:var(--rojo-error);">🗑 Eliminar</button>
+                        ` : `
+                            <span style="color:var(--verde-ok);font-size:13px;">✔ Resuelto</span>
+                            <button class="btn btn-secondary btn-sm" onclick="resolverSinAccion('${r.id}')" style="color:var(--rojo-error);border-color:var(--rojo-error);margin-top:4px;">🗑 Eliminar</button>
+                        `}
                     </div>
                 </td>
             </tr>`;
@@ -450,14 +452,15 @@
         }
     });
 
-    // ── Resolver sin acción ───────────────────────────────────
+    // ── Eliminar reporte ──────────────────────────────────────
     window.resolverSinAccion = async function(reporteId) {
-        if (!confirm('¿Resolver este reporte sin aplicar ninguna acción?')) return;
+        if (!confirm('¿Eliminar este reporte? Esta acción no se puede deshacer.')) return;
         try {
-            await resolverReporte(reporteId, 'sin_accion', usuario.id);
+            const { error } = await supabase.from('reportes').delete().eq('id', reporteId);
+            if (error) throw error;
             cargarReportes(); cargarStats();
         } catch (err) {
-            alert(err.message);
+            alert('Error al eliminar reporte: ' + err.message);
         }
     };
 
