@@ -70,9 +70,9 @@
             <textarea id="reporteDescripcion" rows="4" placeholder="Describe lo ocurrido..." required></textarea>
         </div>
         <div class="form-group">
-            <label for="reporteArchivo">Evidencia opcional</label>
-            <input type="file" id="reporteArchivo" accept="image/*,.pdf,.doc,.docx">
-            <small style="color:var(--texto-gris);font-size:11px;">Puedes subir una foto/documento o pegar un link abajo.</small>
+            <label for="reporteArchivo">Evidencia opcional (imagen o video)</label>
+            <input type="file" id="reporteArchivo" accept="image/*,video/*,.pdf,.doc,.docx">
+            <small style="color:var(--texto-gris);font-size:11px;">Puedes subir una foto, video o documento.</small>
         </div>
         <div class="form-group">
             <label for="reporteEvidencia">Link de evidencia opcional</label>
@@ -267,7 +267,7 @@
         try {
             const evidenciaUrl = evidenciaArchivo
                 ? await subirEvidenciaReporte(evidenciaArchivo, usuario.id)
-                : evidenciaLink;
+                : null;
 
             await reportarUsuario({
                 reporteroId: usuario.id,
@@ -275,7 +275,8 @@
                 viajeId: reporteData.viajeId,
                 motivo,
                 descripcion,
-                evidenciaUrl
+                evidenciaUrl:  evidenciaUrl  || null,
+                evidenciaLink: evidenciaLink || null
             });
             msg.textContent = 'Reporte enviado para revisión.';
             msg.className = 'msg show msg-success';

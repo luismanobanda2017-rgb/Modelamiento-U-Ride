@@ -43,12 +43,13 @@ VALUES (
     'evidencias-reportes',
     'evidencias-reportes',
     true,
-    10485760,  -- 10 MB
-    ARRAY['image/jpeg','image/png','image/gif','image/webp','application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    52428800,  -- 50 MB (para videos)
+    ARRAY['image/jpeg','image/png','image/gif','image/webp','video/mp4','video/webm','video/ogg','video/quicktime','application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document']
 )
 ON CONFLICT (id) DO UPDATE SET
     public = true,
-    file_size_limit = 10485760;
+    file_size_limit = 52428800,
+    allowed_mime_types = ARRAY['image/jpeg','image/png','image/gif','image/webp','video/mp4','video/webm','video/ogg','video/quicktime','application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
 -- Política de storage: cualquiera puede subir
 DROP POLICY IF EXISTS "evidencias_upload" ON storage.objects;

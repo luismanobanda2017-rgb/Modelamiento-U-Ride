@@ -274,6 +274,27 @@
             }[r.accion_admin] || '';
 
             const esImagen = r.evidencia_url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(r.evidencia_url);
+            const esVideo  = r.evidencia_url && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(r.evidencia_url);
+
+            // Construir celda de evidencia mostrando archivo Y link si ambos existen
+            const celdaEvidencia = (() => {
+                const partes = [];
+                if (r.evidencia_url) {
+                    if (esImagen) {
+                        partes.push(`<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}','imagen')" style="width:100%;">🖼 Ver imagen</button>`);
+                    } else if (esVideo) {
+                        partes.push(`<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}','video')" style="width:100%;">🎥 Ver video</button>`);
+                    } else {
+                        partes.push(`<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;">📄 Ver archivo</a>`);
+                    }
+                }
+                if (r.evidencia_link) {
+                    partes.push(`<a href="${r.evidencia_link}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="width:100%;display:block;text-align:center;margin-top:4px;">🔗 Abrir link</a>`);
+                }
+                return partes.length
+                    ? `<div style="display:flex;flex-direction:column;gap:4px;min-width:100px;">${partes.join('')}</div>`
+                    : '<span style="color:var(--texto-gris);font-size:12px;">Sin evidencia</span>';
+            })();
 
             return `
             <tr>
@@ -284,11 +305,7 @@
                     ${r.descripcion ? `<br><span style="color:var(--texto-gris);font-size:12px;">${r.descripcion}</span>` : ''}
                 </td>
                 <td style="text-align:center;">
-                    ${r.evidencia_url
-                        ? (esImagen
-                            ? `<button class="btn btn-secondary btn-sm" onclick="verEvidencia('${r.evidencia_url}', true)">🖼 Ver imagen</button>`
-                            : `<a href="${r.evidencia_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🔗 Abrir link</a>`)
-                        : '<span style="color:var(--texto-gris);font-size:12px;">Sin evidencia</span>'}
+                    ${celdaEvidencia}
                 </td>
                 <td style="font-size:12px;white-space:nowrap;">${new Date(r.created_at).toLocaleDateString('es-EC')}</td>
                 <td>
@@ -355,11 +372,25 @@
     });
 
     // ── Ver Evidencia ─────────────────────────────────────────
-    window.verEvidencia = function(url, esImagen) {
+    window.verEvidencia = function(url, tipo) {
         const contenido = document.getElementById('contenidoEvidencia');
-        if (esImagen) {
-            contenido.innerHTML = `<img src="${url}" alt="Evidencia" class="evidencia-img"><br>
-                <a href="${url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="margin-top:12px;display:inline-block;">Abrir en nueva pestaña</a>`;
+        if (tipo === 'imagen') {
+            contenido.innerHTML = `
+                <img src="${url}" alt="Evidencia" class="evidencia-img">
+                <br>
+                <a href="${url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="margin-top:12px;display:inline-block;">
+                    Abrir en nueva pestaña
+                </a>`;
+        } else if (tipo === 'video') {
+            contenido.innerHTML = `
+                <video controls style="max-width:100%;max-height:400px;border-radius:8px;">
+                    <source src="${url}">
+                    Tu navegador no soporta video. <a href="${url}" target="_blank">Descarga aquí</a>.
+                </video>
+                <br>
+                <a href="${url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="margin-top:12px;display:inline-block;">
+                    Abrir en nueva pestaña
+                </a>`;
         } else {
             contenido.innerHTML = `
                 <div style="font-size:48px;margin-bottom:12px;">📄</div>
