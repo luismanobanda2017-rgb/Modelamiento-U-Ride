@@ -61,9 +61,10 @@
 </div>
 
 <script type="module">
-    import { obtenerUsuarioActual, cerrarSesion, supabase, registrarEvento } from '../Persistence/supabaseClient.js';
+    import { obtenerUsuarioActual, cerrarSesion, supabase, registrarEvento, refrescarPerfil } from '../Persistence/supabaseClient.js';
 
-    const usuario = obtenerUsuarioActual();
+    // Refrescar perfil desde Supabase para tener datos actualizados
+    let usuario = await refrescarPerfil() || obtenerUsuarioActual();
     if (!usuario) { window.location.href = 'index.html'; }
     if (usuario.rol === 'admin') { window.location.href = 'dashboard.html'; }
     if (usuario.modo_actual !== 'conductor' || !usuario.placa_vehiculo) {

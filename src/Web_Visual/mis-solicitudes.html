@@ -118,10 +118,10 @@
 <script type="module">
     import {
         obtenerUsuarioActual, cerrarSesion,
-        calificar, reportarUsuario, subirEvidenciaReporte, supabase
+        calificar, reportarUsuario, subirEvidenciaReporte, supabase, refrescarPerfil
     } from '../Persistence/supabaseClient.js';
 
-    const usuario = obtenerUsuarioActual();
+    const usuario = await refrescarPerfil() || obtenerUsuarioActual();
     if (!usuario) { window.location.href = 'index.html'; }
 
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
@@ -138,72 +138,81 @@
 
     let califData = null;
     let reporteData = null;
-        const { data } = await supabase
-            .from('solicitudes')
-            .select(`*, viaje:viajes(*, conductor:usuarios!conductor_id(id, nombre, calificacion_prom, verificado))`)
-            .eq('pasajero_id', usuario.id)
-            .order('created_at', { ascending: false });
 
+    async function cargar() {
         const lista = document.getElementById('listaSolicitudes');
+        lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">Cargando...</p>';
 
-        if (!data || data.length === 0) {
-            lista.innerHTML = `
-                <div class="card" style="text-align:center;padding:40px;">
-                    <div style="font-size:48px;margin-bottom:12px;">🔍</div>
-                    <p style="color:var(--texto-gris);font-size:14px;">No has enviado solicitudes aún.</p>
-                    <a href="buscar-viajes.html" class="btn btn-primary" style="margin-top:16px;display:inline-block;width:auto;padding:10px 24px;">Buscar Viajes</a>
-                </div>
-            `;
-            return;
-        }
+        try {
+            const { data, error } = await supabase
+                .from('solicitudes')
+                .select(`*, viaje:viajes(*, conductor:usuarios!conductor_id(id, nombre, calificacion_prom, verificado))`)
+                .eq('pasajero_id', usuario.id)
+                .order('created_at', { ascending: false });
 
-        lista.innerHTML = data.map(s => {
-            const v = s.viaje;
-            const estadoColor = {
-                pendiente: 'badge-pendiente',
-                aceptada:  'badge-aceptada',
-                rechazada: 'badge-rechazada',
-                cancelada: 'badge-cancelado'
-            }[s.estado] || 'badge-pendiente';
+            if (error) throw error;
 
-            return `
-                <div class="card" style="margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                        <div style="flex:1;">
-                            <div class="viaje-ruta">📍 ${v?.origen || '—'} → ${v?.destino || '—'}</div>
-                            <div class="viaje-meta">
-                                <span>📅 ${v?.fecha || '—'} ${v?.hora_salida || ''}</span>
-                                <span>👤 ${v?.conductor?.nombre || '—'}</span>
-                                <span>⭐ ${v?.conductor?.calificacion_prom || '—'}</span>
-                                <span>💵 $${v?.precio_persona || 0}/persona</span>
+            if (!data || data.length === 0) {
+                lista.innerHTML = `
+                    <div class="card" style="text-align:center;padding:40px;">
+                        <div style="font-size:48px;margin-bottom:12px;">🔍</div>
+                        <p style="color:var(--texto-gris);font-size:14px;">No has enviado solicitudes aún.</p>
+                        <a href="buscar-viajes.html" class="btn btn-primary" style="margin-top:16px;display:inline-block;width:auto;padding:10px 24px;">Buscar Viajes</a>
+                    </div>
+                `;
+                return;
+            }
+
+            lista.innerHTML = data.map(s => {
+                const v = s.viaje;
+                const estadoColor = {
+                    pendiente: 'badge-pendiente',
+                    aceptada:  'badge-aceptada',
+                    rechazada: 'badge-rechazada',
+                    cancelada: 'badge-cancelado'
+                }[s.estado] || 'badge-pendiente';
+
+                return `
+                    <div class="card" style="margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div style="flex:1;">
+                                <div class="viaje-ruta">📍 ${v?.origen || '—'} → ${v?.destino || '—'}</div>
+                                <div class="viaje-meta">
+                                    <span>📅 ${v?.fecha || '—'} ${v?.hora_salida || ''}</span>
+                                    <span>👤 ${v?.conductor?.nombre || '—'}</span>
+                                    <span>⭐ ${v?.conductor?.calificacion_prom || '—'}</span>
+                                    <span>💵 $${v?.precio_persona || 0}/persona</span>
+                                </div>
+                                <div style="font-size:12px;color:var(--texto-gris);margin-top:4px;">
+                                    Enviada: ${new Date(s.created_at).toLocaleString('es-EC')}
+                                </div>
                             </div>
-                            <div style="font-size:12px;color:var(--texto-gris);margin-top:4px;">
-                                Enviada: ${new Date(s.created_at).toLocaleString('es-EC')}
-                            </div>
+                            <span class="badge ${estadoColor}" style="margin-left:12px;">${s.estado}</span>
                         </div>
-                        <span class="badge ${estadoColor}" style="margin-left:12px;">${s.estado}</span>
-                    </div>
 
-                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-                        ${s.estado === 'pendiente' ? `
-                            <button class="btn btn-danger btn-sm" onclick="cancelarSolicitud('${s.id}')">
-                                Cancelar Solicitud
-                            </button>
-                        ` : ''}
-                        ${s.estado === 'aceptada' && v?.estado === 'finalizado' ? `
-                            <button class="btn btn-secondary btn-sm" onclick="abrirCalificar('${v?.conductor?.id}', '${v?.conductor?.nombre}', '${v?.id}')">
-                                ⭐ Calificar Conductor
-                            </button>
-                        ` : ''}
-                        ${s.estado === 'aceptada' ? `
-                            <button class="btn btn-danger btn-sm" onclick="abrirReportar('${v?.conductor?.id}', '${v?.conductor?.nombre}', '${v?.id}')">
-                                Reportar
-                            </button>
-                        ` : ''}
+                        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                            ${s.estado === 'pendiente' ? `
+                                <button class="btn btn-danger btn-sm" onclick="cancelarSolicitud('${s.id}')">
+                                    Cancelar Solicitud
+                                </button>
+                            ` : ''}
+                            ${s.estado === 'aceptada' && v?.estado === 'finalizado' ? `
+                                <button class="btn btn-secondary btn-sm" onclick="abrirCalificar('${v?.conductor?.id}', '${v?.conductor?.nombre}', '${v?.id}')">
+                                    ⭐ Calificar Conductor
+                                </button>
+                            ` : ''}
+                            ${s.estado === 'aceptada' ? `
+                                <button class="btn btn-danger btn-sm" onclick="abrirReportar('${v?.conductor?.id}', '${v?.conductor?.nombre}', '${v?.id}')">
+                                    Reportar
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        } catch (err) {
+            lista.innerHTML = `<p style="color:var(--rojo-error);font-size:14px;">Error al cargar solicitudes: ${err.message}</p>`;
+        }
     }
 
     window.cancelarSolicitud = async function(solicitudId) {

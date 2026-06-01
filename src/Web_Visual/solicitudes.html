@@ -118,10 +118,10 @@
 <script type="module">
     import {
         obtenerUsuarioActual, cerrarSesion,
-        responderSolicitud, calificar, reportarUsuario, subirEvidenciaReporte, supabase
+        responderSolicitud, calificar, reportarUsuario, subirEvidenciaReporte, supabase, refrescarPerfil
     } from '../Persistence/supabaseClient.js';
 
-    const usuario = obtenerUsuarioActual();
+    let usuario = await refrescarPerfil() || obtenerUsuarioActual();
     if (!usuario) { window.location.href = 'index.html'; }
     if (usuario.rol === 'admin') { window.location.href = 'dashboard.html'; }
     if (usuario.modo_actual !== 'conductor' || !usuario.placa_vehiculo) {

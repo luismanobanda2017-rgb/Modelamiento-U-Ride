@@ -112,9 +112,9 @@
 </div>
 
 <script type="module">
-    import { obtenerUsuarioActual, cerrarSesion, buscarViajes, enviarSolicitud } from '../Persistence/supabaseClient.js';
+    import { obtenerUsuarioActual, cerrarSesion, buscarViajes, enviarSolicitud, refrescarPerfil } from '../Persistence/supabaseClient.js';
 
-    const usuario = obtenerUsuarioActual();
+    const usuario = await refrescarPerfil() || obtenerUsuarioActual();
     if (!usuario) { window.location.href = 'index.html'; }
 
     document.getElementById('sidebarNombre').textContent = usuario.nombre;
@@ -205,6 +205,9 @@
         document.getElementById('formFiltros').reset();
         cargar({});
     });
+
+    // Carga inicial de todos los viajes disponibles
+    cargar({});
 
     // Modal detalle
     window.abrirDetalle = function(viajeId) {

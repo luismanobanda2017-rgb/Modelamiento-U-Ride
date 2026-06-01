@@ -30,6 +30,26 @@ function guardarSesion(usuario) {
     localStorage.setItem('uride_usuario', JSON.stringify(usuario));
 }
 
+// Refresca el perfil del usuario desde Supabase y actualiza el localStorage
+export async function refrescarPerfil() {
+    const local = obtenerUsuarioActual();
+    if (!local) return null;
+
+    let res = await supabase.from('usuarios').select('*').eq('id', local.id).maybeSingle();
+    if (res.error) {
+        // Reintentar sin modelo_vehiculo si la columna no existe
+        const msg = String(res.error.message || '').toLowerCase();
+        if (msg.includes('modelo_vehiculo')) {
+            res = await supabase.from('usuarios').select(safeSelectCols).eq('id', local.id).maybeSingle();
+        }
+    }
+    if (res.data) {
+        guardarSesion(res.data);
+        return res.data;
+    }
+    return local;
+}
+
 export async function cerrarSesion() {
     await supabase.auth.signOut();
     localStorage.removeItem('uride_usuario');

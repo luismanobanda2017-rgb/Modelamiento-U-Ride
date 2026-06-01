@@ -114,10 +114,10 @@
         obtenerUsuarioActual, cerrarSesion,
         buscarViajes, publicarViaje,
         obtenerUsuarios, obtenerReportes,
-        supabase
+        supabase, refrescarPerfil
     } from '../Persistence/supabaseClient.js';
 
-    const usuario = obtenerUsuarioActual();
+    const usuario = await refrescarPerfil() || obtenerUsuarioActual();
     if (!usuario) { window.location.href = 'index.html'; }
 
     // Sidebar info
@@ -137,7 +137,6 @@
         document.getElementById('seccionPasajero').style.display = 'none';
         document.getElementById('navConductor').style.display = 'none';
         document.getElementById('navPasajero').style.display = 'none';
-        document.getElementById('marketplaceNote').style.display = 'none';
         cargarStatsAdmin();
     } else {
         const isConductor = usuario.modo_actual === 'conductor';
