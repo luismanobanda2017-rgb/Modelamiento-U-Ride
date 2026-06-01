@@ -144,13 +144,19 @@
         lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">Cargando...</p>';
 
         try {
+            console.log('Cargando solicitudes para pasajero:', usuario.id);
             const { data, error } = await supabase
                 .from('solicitudes')
                 .select(`*, viaje:viajes(*, conductor:usuarios!conductor_id(id, nombre, calificacion_prom, verificado))`)
                 .eq('pasajero_id', usuario.id)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error al cargar solicitudes:', error);
+                throw error;
+            }
+
+            console.log('Solicitudes cargadas:', data);
 
             if (!data || data.length === 0) {
                 lista.innerHTML = `
@@ -211,7 +217,8 @@
                 `;
             }).join('');
         } catch (err) {
-            lista.innerHTML = `<p style="color:var(--rojo-error);font-size:14px;">Error al cargar solicitudes: ${err.message}</p>`;
+            console.error('Error en cargar():', err);
+            lista.innerHTML = `<p style="color:var(--rojo-error);font-size:14px;">Error: ${err.message}</p>`;
         }
     }
 

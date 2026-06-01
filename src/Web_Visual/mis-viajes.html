@@ -87,66 +87,80 @@
     let viajeACancelar = null;
 
     async function cargar() {
-        const { data } = await supabase
-            .from('viajes')
-            .select('*, solicitudes(id, estado)')
-            .eq('conductor_id', usuario.id)
-            .order('fecha', { ascending: false });
-
         const lista = document.getElementById('listaViajes');
+        lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">Cargando viajes...</p>';
 
-        if (!data || data.length === 0) {
-            lista.innerHTML = `
-                <div class="card" style="text-align:center;padding:40px;">
-                    <div style="font-size:48px;margin-bottom:12px;">🚗</div>
-                    <p style="color:var(--texto-gris);font-size:14px;">No has publicado viajes aún.</p>
-                    <a href="publicar-viaje.html" class="btn btn-primary" style="margin-top:16px;display:inline-block;width:auto;padding:10px 24px;">Publicar Viaje</a>
-                </div>
-            `;
-            return;
-        }
+        try {
+            console.log('Cargando viajes para conductor:', usuario.id);
+            const { data, error } = await supabase
+                .from('viajes')
+                .select('*, solicitudes(id, estado)')
+                .eq('conductor_id', usuario.id)
+                .order('fecha', { ascending: false });
 
-        lista.innerHTML = data.map(v => {
-            const pendientes = v.solicitudes?.filter(s => s.estado === 'pendiente').length || 0;
-            const aceptadas  = v.solicitudes?.filter(s => s.estado === 'aceptada').length  || 0;
+            if (error) {
+                console.error('Error al cargar viajes:', error);
+                throw error;
+            }
 
-            return `
-                <div class="card" style="margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                        <div>
-                            <div class="viaje-ruta">📍 ${v.origen} → ${v.destino}</div>
-                            <div class="viaje-meta">
-                                <span>📅 ${v.fecha}</span>
-                                <span>🕐 ${v.hora_salida}</span>
-                                <span>👥 ${v.cupos_disponibles}/${v.cupos_total} cupos</span>
-                                <span>💵 $${v.precio_persona}/persona</span>
+            console.log('Viajes cargados:', data);
+
+            if (!data || data.length === 0) {
+                lista.innerHTML = `
+                    <div class="card" style="text-align:center;padding:40px;">
+                        <div style="font-size:48px;margin-bottom:12px;">🚗</div>
+                        <p style="color:var(--texto-gris);font-size:14px;">No has publicado viajes aún.</p>
+                        <a href="publicar-viaje.html" class="btn btn-primary" style="margin-top:16px;display:inline-block;width:auto;padding:10px 24px;">Publicar Viaje</a>
+                    </div>
+                `;
+                return;
+            }
+
+            lista.innerHTML = data.map(v => {
+                const pendientes = v.solicitudes?.filter(s => s.estado === 'pendiente').length || 0;
+                const aceptadas  = v.solicitudes?.filter(s => s.estado === 'aceptada').length  || 0;
+
+                return `
+                    <div class="card" style="margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div>
+                                <div class="viaje-ruta">📍 ${v.origen} → ${v.destino}</div>
+                                <div class="viaje-meta">
+                                    <span>📅 ${v.fecha}</span>
+                                    <span>🕐 ${v.hora_salida}</span>
+                                    <span>👥 ${v.cupos_disponibles}/${v.cupos_total} cupos</span>
+                                    <span>💵 $${v.precio_persona}/persona</span>
+                                </div>
+                                ${v.notas ? `<p style="font-size:12px;color:var(--texto-gris);margin-top:4px;">📝 ${v.notas}</p>` : ''}
                             </div>
-                            ${v.notas ? `<p style="font-size:12px;color:var(--texto-gris);margin-top:4px;">📝 ${v.notas}</p>` : ''}
+                            <span class="badge badge-${v.estado}">${v.estado}</span>
                         </div>
-                        <span class="badge badge-${v.estado}">${v.estado}</span>
-                    </div>
 
-                    <div style="display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--texto-gris);">
-                        <span>⏳ ${pendientes} pendiente(s)</span>
-                        <span>✅ ${aceptadas} confirmado(s)</span>
-                    </div>
+                        <div style="display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--texto-gris);">
+                            <span>⏳ ${pendientes} pendiente(s)</span>
+                            <span>✅ ${aceptadas} confirmado(s)</span>
+                        </div>
 
-                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-                        <a href="solicitudes.html" class="btn btn-secondary btn-sm">Ver Solicitudes</a>
-                        ${v.estado === 'disponible' ? `
-                            <button class="btn btn-danger btn-sm" onclick="confirmarCancelar('${v.id}')">
-                                Cancelar Viaje
-                            </button>
-                            ${v.cupos_disponibles === 0 ? `
-                                <button class="btn btn-primary btn-sm" onclick="finalizarViaje('${v.id}')">
-                                    Finalizar Viaje
+                        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                            <a href="solicitudes.html" class="btn btn-secondary btn-sm">Ver Solicitudes</a>
+                            ${v.estado === 'disponible' ? `
+                                <button class="btn btn-danger btn-sm" onclick="confirmarCancelar('${v.id}')">
+                                    Cancelar Viaje
                                 </button>
+                                ${v.cupos_disponibles === 0 ? `
+                                    <button class="btn btn-primary btn-sm" onclick="finalizarViaje('${v.id}')">
+                                        Finalizar Viaje
+                                    </button>
+                                ` : ''}
                             ` : ''}
-                        ` : ''}
+                        </div>
                     </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        } catch (err) {
+            console.error('Error en cargar():', err);
+            lista.innerHTML = `<p style="color:var(--rojo-error);font-size:14px;">Error: ${err.message}</p>`;
+        }
     }
 
     window.confirmarCancelar = function(viajeId) {

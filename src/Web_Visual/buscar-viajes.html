@@ -137,7 +137,10 @@
         lista.innerHTML = '<p style="color:var(--texto-gris);font-size:14px;">Buscando...</p>';
 
         try {
+            console.log('Buscando viajes con filtros:', filtros);
             const viajes = await buscarViajes(filtros);
+            console.log('Viajes encontrados:', viajes);
+            
             document.getElementById('contadorResultados').textContent =
                 `${viajes.length} viaje(s) encontrado(s)`;
 
@@ -186,7 +189,8 @@
             // Guardar viajes en window para acceso desde onclick
             window._viajes = viajes;
         } catch (err) {
-            lista.innerHTML = `<p style="color:var(--rojo-error);font-size:14px;">${err.message}</p>`;
+            console.error('Error al cargar viajes:', err);
+            lista.innerHTML = `<p style="color:var(--rojo-error);font-size:14px;">Error: ${err.message}</p>`;
         }
     }
 
