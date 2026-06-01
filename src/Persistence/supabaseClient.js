@@ -473,7 +473,7 @@ export async function registrarEvento(usuarioId, tipo, descripcion, referenciaId
 export async function obtenerReportes() {
     const { data, error } = await supabase
         .from('reportes')
-        .select(`*, reportero:usuarios!reportero_id(nombre, email), reportado:usuarios!reportado_id(nombre, email)`)
+        .select(`id, reportero_id, reportado_id, viaje_id, motivo, descripcion, evidencia_url, evidencia_link, estado, accion_admin, created_at, updated_at, reportero:usuarios!reportero_id(nombre, email), reportado:usuarios!reportado_id(nombre, email)`)
         .order('created_at', { ascending: false });
     if (error) throw new Error('Error: ' + error.message);
     return data || [];
